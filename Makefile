@@ -40,7 +40,7 @@ FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -O2 -Wall -Wextr
 FLAGS_S = -mcpu=arm1176jzf-s -fpic -ffreestanding -c
 
 # Names of the objects that must be generated in the compilation
-OBJECTS = $(OBJ)boot.o $(OBJ)kernel.o
+OBJECTS = 	$(OBJ)boot.o $(OBJ)io.o $(OBJ)uart.o $(OBJ)kernel.o
 
 # Make everything
 all: $(TARGET)
@@ -59,12 +59,12 @@ $(BUILD_DIRECTORY)$(ELF): $(OBJECTS)
 
 # Build .c files
 $(OBJ)%.o: $(SOURCE_DIRECTORY)%.c
-	@echo "Compiling .c files..."
+	@echo "Building $@..."
 	@$(ARM_TOOLCHAIN)-gcc -I $(INCLUDE_DIRECTORY) $(FLAGS_C) $< -o $@
 
 #Build the assembler files
 $(OBJ)%.o: $(SOURCE_DIRECTORY)%.s
-	@echo "Compiling .s files..."
+	@echo "Building $@..."
 	@$(ARM_TOOLCHAIN)-gcc -I $(INCLUDE_DIRECTORY) $(FLAGS_S) $< -o $@
 
 $(BUILD_DIRECTORY):

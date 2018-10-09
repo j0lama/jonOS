@@ -38,5 +38,10 @@ SECTIONS
     }
     . = ALIGN(4096); /* align to page size */
     __bss_end = .;
+    /*Allocating memory for the heap*/
+    __heap_start = .;
+    . = . + 0x1000000;  /*4MB Heap section*/
+    __heap_end = .;
+    __binary_function = .;
     __end = .;
 }
