@@ -40,7 +40,7 @@ FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -O2 -Wall -Wextr
 FLAGS_S = -mcpu=arm1176jzf-s -fpic -ffreestanding -c
 
 # Names of the objects that must be generated in the compilation
-OBJECTS = 	$(OBJ)boot.o $(OBJ)io.o $(OBJ)uart.o $(OBJ)kernel.o
+OBJECTS = 	$(OBJ)boot.o $(OBJ)io.o $(OBJ)uart.o $(OBJ)malloc.o $(OBJ)kernel.o
 
 # Make everything
 all: $(TARGET)

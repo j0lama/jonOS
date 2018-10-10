@@ -1,6 +1,5 @@
-visua#include <stdio.h>
-#include <pthread.h>
-#include <unistd.h>
+#include "stdint.h"
+#include "stddef.h"
 
 
 struct header_t
@@ -11,7 +10,22 @@ struct header_t
 };
 
 struct header_t *first = NULL, *last = NULL;
-pthread_mutex_t mem_mutex;
+
+
+extern volatile uint8_t __heap_start;	/*Heap start address*/
+extern volatile uint8_t __heap_end;		/*Heap end address*/
+
+/*BRK Pointer*/
+void * brk = 0;
+
+/*Function that allows to decrease and increase the brk pointer*/
+void * sbrk(size_t size)
+{
+	if(size == 0)
+		return brk;
+	brk = brk + size;
+	return brk;
+}
 
 struct header_t * get_first_free_block(size_t size)
 {
@@ -28,6 +42,8 @@ struct header_t * get_first_free_block(size_t size)
 	return NULL;
 }
 
+/*Is not necessary to protect the alloc and free actions with a mutex because there will be only one process*/
+
 void * malloc(size_t size)
 {
 	size_t total_size;
@@ -37,30 +53,23 @@ void * malloc(size_t size)
 	if(!size)
 		return NULL;
 
-	/*Lock memory allocation mutex*/
-	pthread_mutex_lock(&mem_mutex);
-
 	header = get_first_free_block(size);
 
 	/*There is a free block with the appropiate size*/
 	if(header != NULL)
 	{
 		header->free = 0;
-		/*Unlock memory allocation mutex*/
-		pthread_mutex_unlock(&mem_mutex);
 		return (void *) (header + 1);
 	}
 
 	total_size = sizeof(struct header_t) + size;
 
 	/*Alloc memory*/
-	block = sbrk(total_size);
+	block = (void *)sbrk(total_size);
 
 	/*Allocation error*/
 	if(block == (void *)-1)
 	{
-		/*Unlock memory allocation mutex*/
-		pthread_mutex_unlock(&mem_mutex);
 		return NULL;
 	}
 	
@@ -73,9 +82,6 @@ void * malloc(size_t size)
 	/*Adding new block to the block chain*/
 	last->next = header;
 	last = header;
-
-	/*Unlock memory allocation mutex*/
-	pthread_mutex_unlock(&mem_mutex);
 
 	return (void *) (header + 1);
 }
@@ -90,14 +96,11 @@ void free(void * block)
 	if(block == NULL)
 		return;
 
-	/*Lock memory allocation mutex*/
-	pthread_mutex_lock(&mem_mutex);
-
 	/*Get the header of the block*/
 	header = (struct header_t *)block - 1;
 
 	/*Get brk pointer*/
-	brk_pointer = sbrk(0);
+	brk_pointer = (void *)sbrk(0);
 
 	/*Freeing latest block allocated*/
 	if(brk_pointer == block + header->size)
@@ -113,18 +116,13 @@ void free(void * block)
 				aux = aux->next;
 
 			/*Remove the block from the chain*/
-			aux->next == NULL;
+			aux->next = NULL;
 			last = aux;
 		}
 		sbrk(-(sizeof(struct header_t) + header->size));
-
-		/*Unlock memory allocation mutex*/
-		pthread_mutex_unlock(&mem_mutex);
 		return;
 	}
 	header->free = 1;
 
-	/*Unlock memory allocation mutex*/
-	pthread_mutex_unlock(&mem_mutex);
 	return;
 }
