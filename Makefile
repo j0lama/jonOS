@@ -36,7 +36,7 @@ LINKER_FILE = linker.ld
 UNAME := $(shell uname)
 
 # Flags for compilation
-FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -O2 -Wall -Wextra -pedantic
+FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O2 -Wall -Wextra -pedantic -D_RASPI2
 FLAGS_S = -mcpu=arm1176jzf-s -fpic -ffreestanding -c
 
 # Names of the objects that must be generated in the compilation
@@ -82,6 +82,7 @@ clean:
 # Compile and run in QEMU
 run: $(TARGET)
 	qemu-system-arm -m 512 -M raspi2 -serial stdio -kernel $(BUILD_DIRECTORY)$(ELF)
+
 
 
 

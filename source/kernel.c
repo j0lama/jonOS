@@ -1,27 +1,28 @@
 #include "stdint.h"
 #include "uart.h"
 
+extern volatile uint8_t __binary_function;
+
 void kernel_main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
-	// Declare as unused
+	/*Declare as unused*/
 	(void) r0;
 	(void) r1;
 	(void) atags;
 
-	uint8_t value = 0;
- 
+	uint32_t i = 0;
+	void (*f)() = (void(*)()) __binary_function;
+	uint8_t * value = (uint8_t *) __binary_function;
+
 	uart_init();
-	uart_puts("Me voy a cagar en Dios como no funcione!\r\n");
- 
-	while (1)
+
+	for(i = 0; i < 186; i++)
 	{
-		value = uart_getc();
-		if (value == 'n')
-			uart_puts("Next\r\n");
-		else if (value == 'b')
-			uart_puts("Back\r\n");
-		else
-			uart_puts("Unknown\r\n");
+		*(value + i) = uart_getc();
+		uart_putc(*(value + i));
 	}
+
+	f();
+
 }
 

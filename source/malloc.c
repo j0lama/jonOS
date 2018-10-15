@@ -23,7 +23,7 @@ void * sbrk(size_t size)
 {
 	if(size == 0)
 		return brk;
-	brk = brk + size;
+	brk = (void *)(((unsigned int) brk) + size);
 	return brk;
 }
 
@@ -103,7 +103,7 @@ void free(void * block)
 	brk_pointer = (void *)sbrk(0);
 
 	/*Freeing latest block allocated*/
-	if(brk_pointer == block + header->size)
+	if(brk_pointer == (void *) (((unsigned int) (block)) + header->size) )
 	{
 		/*There is only one block allocated*/
 		if(first == last)
