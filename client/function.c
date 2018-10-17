@@ -1,12 +1,10 @@
 /*Example of a function using the jonOS's libraries*/
-
-#include "stdint.h"
-
 void function()
 {
- 
+	void (* uart_puts)(char *) = (void(*)(char * )) 0x0000000000008248;
+	char (* msg) = (char *) 0x7fb8;
 	while (1)
 	{
-		uart_puts("Me voy a cagar en Dios como no funcione!\r\n");
+		uart_puts(msg);
 	}
 }

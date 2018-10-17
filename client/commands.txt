@@ -1,0 +1,2 @@
+Get .text section from an ELF file:
+objcopy --only-section=<name> <infile> <outfile>
