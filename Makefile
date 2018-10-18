@@ -36,7 +36,7 @@ LINKER_FILE = linker.ld
 UNAME := $(shell uname)
 
 # Flags for compilation
-FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O0 -Wall -Wextra -pedantic
+FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O0 -Wall -Wextra -pedantic -D_RASPI2
 FLAGS_S = -mcpu=arm1176jzf-s -fpic -ffreestanding -c
 
 # Names of the objects that must be generated in the compilation
