@@ -15,6 +15,8 @@ all:
 	@echo "Building binary..."
 	@$(ARM_TOOLCHAIN)-gcc -I $(LIBKERNEL) $(FLAGS_C) -c binary_function.c -o binary_function.o
 
+.PHONY: clean
+
 # Rule to clean all
 clean:
 	@rm -f binary_function.o

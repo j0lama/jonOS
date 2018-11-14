@@ -6,6 +6,6 @@ void binary_function()
 {
 	while (1)
 	{
-		uart_puts(msg);
+		uart_puts("Jon\r\n");
 	}
 }

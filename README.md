@@ -11,9 +11,3 @@ El kernel comienza en la dirección 0x8000 y es en esa dirección donde encontra
 
 #### Acceso a la red
 He encontrado una librería que se llama lwip (Light-weight IP) y que es una implementación reducida del protocolo TCP/IP además de muchos otros.
-
-## Changelog
-
-- 10/10/2018: Ejecuta en Raspberry con UART funcionando como portocolo de comunicación.
-
-Siguiente paso: Implementar Malloc

@@ -36,7 +36,7 @@ LINKER_FILE = linker.ld
 UNAME := $(shell uname)
 
 # Flags for compilation
-FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O0 -Wall -Wextra -pedantic -D_RASPI2
+FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O0 -Wall -Wextra -pedantic
 FLAGS_S = -mcpu=arm1176jzf-s -fpic -ffreestanding -c
 
 # Names of the objects that must be generated in the compilation
@@ -73,37 +73,18 @@ $(BUILD_DIRECTORY):
 $(OBJ):
 	@mkdir objects
 
+.PHONY: clean
+
 # Rule to clean all
 clean:
 	@rm -f $(TARGET) $(MAP_FILE) jonOS.img
 	@rm -rf $(BUILD_DIRECTORY) $(OBJ)
 	@echo "Clean done"
 
-######################
-# For Raspberry Pi 1 #
-######################
 
-# Compile and run in QEMU
+# Run a HTTP Server to send the kernel to the emulator
 run: $(TARGET)
-	qemu-system-arm -cpu arm1176 -m 256 -M versatilepb -no-reboot -serial stdio -kernel $(BUILD_DIRECTORY)$(ELF)
-
-# Compile and Debug the kernel in QEMU
-debug: $(TARGET)
-	qemu-system-arm -cpu arm1176 -m 256 -M versatilepb -no-reboot -serial stdio -s -S -kernel $(BUILD_DIRECTORY)$(ELF)
-	# target remote localhost:1234
-	# file test.elf
-
-######################
-# For Raspberry Pi 2 #
-######################
-
-# Compile and run in QEMU
-run2: $(TARGET)
-	qemu-system-arm -m 256 -M raspi2 -serial stdio -kernel $(BUILD_DIRECTORY)$(ELF)
-
-# Compile and Debug the kernel in QEMU
-debug2: $(TARGET)
-	qemu-system-arm -m 256 -M raspi2 -serial stdio -s -S -kernel $(BUILD_DIRECTORY)$(ELF)
+	@python3 -m http.server
 	# target remote localhost:1234
 	# file test.elf
 
