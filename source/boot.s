@@ -9,7 +9,7 @@
 // r0 -> 0x00000000
 // r1 -> 0x00000C42
 // r2 -> 0x00000100 - start of ATAGS
-// preserve these registers as argument for kernel_main
+// preserve these registers as argument for main
 _start:
 	// Setup the stack.
 	mov sp, #0x8000
@@ -33,7 +33,7 @@ _start:
 	blo 1b
  
 	// Call main
-	ldr r3, = kernel_main
+	ldr r3, = main
 	blx r3
  
 	// halt

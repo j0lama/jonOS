@@ -3,12 +3,14 @@
 
 #ifdef _RASPI2
 /*For Raspberry Pi 2 and 3*/
-#define GPIO_BASE 		0x3F200000
-#define UART0_BASE 		0x3F201000
+#define GPIO_BASE 			0x3F200000
+#define UART0_BASE 			0x3F201000
 #else
 /*For Raspberry Pi 1 and Zero*/
-#define GPIO_BASE 		0x20200000
-#define UART0_BASE 		0x20201000
+#define SYSTEM_TIMER_BASE	0x20003000
+#define INTERRUPTS_BASE 	0x2000B000
+#define GPIO_BASE 			0x20200000
+#define UART0_BASE 			0x20201000
 #endif
 
 /*Controls actuation of pull up/down to ALL GPIO pins*/
