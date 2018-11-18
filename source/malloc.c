@@ -12,11 +12,16 @@ struct header_t
 struct header_t *first = NULL, *last = NULL;
 
 
-extern volatile uint8_t __heap_start;	/*Heap start address*/
-extern volatile uint8_t __heap_end;		/*Heap end address*/
+extern volatile uint8_t *__heap_start;	/*Heap start address*/
+extern volatile uint8_t *__heap_end;		/*Heap end address*/
 
 /*BRK Pointer*/
-void * brk = 0;
+uint8_t * brk = 0;
+
+void dinamic_mem_init()
+{
+	brk = (uint8_t*)__heap_start;
+}
 
 /*Function that allows to decrease and increase the brk pointer*/
 void * sbrk(size_t size)

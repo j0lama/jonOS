@@ -48,6 +48,7 @@ void interrupts_init(void) {
     { /*If not enabled*/
         __asm__ __volatile__("cpsie i"); /*Enable the interrupts with CPS (Change Processor State)*/
     }
+    uart_puts("OK: interrupts initialized correctly.\r\n");
 }
 
 void register_irq_handler(irq_number_t irq_num, interrupt_handler_f handler, interrupt_clearer_f clearer)
