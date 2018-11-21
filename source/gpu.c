@@ -5,12 +5,15 @@
 #include "uart.h"
 #include "fonts.h"
 
+extern int idiv(uint32_t N, uint32_t D);
+
 typedef struct 
 {
 	unsigned short int foreground_color;
 	unsigned short int background_color;
 	int x;
 	int y;
+	uint32_t char_size;
 } console_t;
 
 console_t console;
@@ -25,16 +28,17 @@ void set_background_color(unsigned short int color)
 	console.background_color = color;
 }
 
-void gpu_init()
+void gpu_init(uint8_t char_size)
 {
 	/*Init the frame buffer to access the structure*/
-	framebuffer_init();
+	framebuffer_init(char_size);
 	/*Set up the colors*/
 	set_foreground_color(WHITE);
 	set_background_color(BLACK);
+	/*Set up the character size (SMALL, NORMAL, BIG)*/
+	console.char_size = char_size;
 	/*Set up the cursor position*/
 	console.x = 0;
-	console.y = 0;
 	uart_puts("OK: GPU (VideoCore) initialized correctly.\r\n");
 }
 
@@ -59,24 +63,26 @@ void move_cursor()
 	}
 }
 
-void console_write_char(uint8_t c)
+void console_write_char(uint8_t character)
 {
 	volatile unsigned short int *ptr;
 
 	uint32_t row, offset;
-	int col;
-
-	for(row=0; row<CHARSIZE_Y; row++)
+	uint32_t col;
+	/*To avoid unnecessary operations in the second loop*/
+	uint32_t sizeX = CHARSIZE_X*console.char_size;
+	uint32_t sizeY = CHARSIZE_Y*console.char_size;
+	for(row = 0; row < sizeY; row++)
 	{
-		offset = (row+console.y*CHARSIZE_Y)*framebuffer.pitch + console.x*CHARSIZE_X*2;
-		for(col = 0; col < (CHARSIZE_X-1); col++)
+		offset = (row+console.y*sizeY)*framebuffer.pitch + console.x*sizeX*2;
+		for(col = 0; col < sizeX; col++)
 		{
-			ptr = (unsigned short int *)(framebuffer.screenbase+offset);
-			offset += BITS_PER_PIXEL/8; /*Pixel size*/
-			if(row < (CHARSIZE_Y-1) && (font8x8_basic[c][row] & (1<<col)))
-				*ptr = console.foreground_color;
-			else
-				*ptr = console.background_color;
+				ptr = (unsigned short int *)(framebuffer.screenbase+offset);
+				offset += BITS_PER_PIXEL/8; /*Pixel size*/
+				if(row < sizeX && (font8x8_basic[character][idiv(row, console.char_size)] & (1 << idiv(col, console.char_size))))
+					*ptr = console.foreground_color;
+				else
+					*ptr = console.background_color;
 		}
 		ptr = (unsigned short int *)(framebuffer.screenbase+offset);
 		*ptr = console.background_color;

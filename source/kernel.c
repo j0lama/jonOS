@@ -2,9 +2,12 @@
 #include "uart.h"
 #include "interrupt.h"
 #include "timer.h"
+#include "string.h"
+#include "framebuffer.h"
 #include "gpu.h"
 
 extern volatile uint32_t __binary_function;
+extern volatile uint32_t __heap_start;
 
 void main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
@@ -14,15 +17,30 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void) atags;
 
 	uart_init();
-	gpu_init();
-	interrupts_init();
-	timer_init();
+	gpu_init(CHAR_SIZE_MEDIUM);
+	//interrupts_init();
+	//timer_init();
 
 
 	uart_puts("Hello from UART\r\n");
-	timer(5);
-	set_background_color(RED);
-	console_puts("Hola que esta pasando aqui\nEsto tiene pinta de funcionar\nAhora a porbar\tmas cosas xD");
+	//timer(5);
+	set_foreground_color(WHITE);
+	console_puts(" Welcome to jonOS\n\n");
+	set_foreground_color(GREEN);
+	console_puts(" Screen base address: ");
+	console_puts(uint2hex(framebuffer.screenbase));
+	set_foreground_color(YELLOW);
+	console_puts("\n\n Screen dimensions: ");
+	console_puts(uint2dec(framebuffer.x));
+	console_puts("x");
+	console_puts(uint2dec(framebuffer.y));
+	set_foreground_color(BLUE);
+	console_puts("\n\n Heap base address: ");
+	console_puts(uint2hex((uint32_t)&__heap_start));
+	set_foreground_color(RED);
+	console_puts("\n\n Payload base address: ");
+	console_puts(uint2hex((uint32_t)&__binary_function));
+
 
 	while (1);
 	/*

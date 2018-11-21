@@ -18,6 +18,6 @@ typedef struct
 
 framebuffer_t framebuffer;
 
-void framebuffer_init(void);
+void framebuffer_init(uint32_t char_size);
 
 #endif

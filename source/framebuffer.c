@@ -8,6 +8,7 @@
 #include "mailbox.h"
 #include "uart.h"
 #include "gpu.h"
+#include "gpu.h"
 
 /*VideoCore request/response codes*/
 #define REQUEST_CODE 0
@@ -24,6 +25,8 @@
 #define SET_VIRTUAL_RESOLUTION 0x00048004
 #define SET_DEPTH 0x00048005
 
+extern int idiv(uint32_t N, uint32_t D);
+
 /*	Message content
 
 	AAAABBBBxxxxxxxxCCCCyyyyyyyy
@@ -35,7 +38,7 @@
 	 └ Buffer Size
  */
 
-void framebuffer_init()
+void framebuffer_init(uint32_t  char_size)
 {
 	uint32_t count;
 	uint32_t c;
@@ -237,8 +240,8 @@ void framebuffer_init()
 	}
 
 	/*Setting up the max dimensions (Used in to print' fucntions)*/
-	framebuffer.max_x = framebuffer.x / CHARSIZE_X;
-	framebuffer.max_y = framebuffer.y / CHARSIZE_Y;
+	framebuffer.max_x = idiv(framebuffer.x, (CHARSIZE_X*char_size));
+	framebuffer.max_y = idiv(framebuffer.y, (CHARSIZE_Y*char_size));
 
 	uart_puts("OK: Framebuffer initialized correctly.\r\n");
 }
