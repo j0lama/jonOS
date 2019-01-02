@@ -23,6 +23,9 @@ SOURCE_DIRECTORY = source/
 # Directory of the header files
 INCLUDE_DIRECTORY = include/
 
+# External library for ethernet support
+LIB_DIRECTORY = lib/
+
 # Name of the output image file
 TARGET = $(NAME).img
 
@@ -54,7 +57,7 @@ $(TARGET): $(BUILD_DIRECTORY) $(OBJECT_DIRECTORY) $(BUILD_DIRECTORY)$(ELF)
 	@echo "Compilation done"
 
 # Rule to build the elf file
-$(BUILD_DIRECTORY)$(ELF): $(OBJECTS)
+$(BUILD_DIRECTORY)$(ELF): LIB_USPI $(OBJECTS)
 	@echo "Linking objects..."
 	@$(ARM_TOOLCHAIN)-ld --no-undefined $(OBJECTS) -Map $(MAP_FILE) -o $(BUILD_DIRECTORY)$(ELF) -T $(LINKER_FILE)
 
@@ -74,12 +77,17 @@ $(BUILD_DIRECTORY):
 $(OBJECT_DIRECTORY):
 	@mkdir objects
 
+LIB_USPI:
+	@echo "Building Ethernet Library..."
+	$(MAKE) -C $(LIB_DIRECTORY)
+
 .PHONY: clean
 
 # Rule to clean all
 clean:
 	@rm -f $(TARGET) $(MAP_FILE) jonOS.img
 	@rm -rf $(BUILD_DIRECTORY) $(OBJECT_DIRECTORY)
+	$(MAKE) -C $(LIB_DIRECTORY) clean
 	@echo "Clean done"
 
 # Run a HTTP Server to send the kernel to the emulator
