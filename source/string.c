@@ -21,6 +21,24 @@ char *uint2hex(uint32_t value)
 	return buffer;
 }
 
+char *char2hex(uint8_t value)
+{
+	static char buffer[3];
+	uint8_t offset;
+	uint8_t c;
+	offset=2;
+	while(offset--)
+	{
+		c = '0' + (value & 0xF);
+		if(c>=58) /*If its letter*/
+			c+=7;
+		buffer[offset] = c;
+		value = value >> 4; /*Next digit*/
+	}
+	buffer[2] = 0;
+	return buffer;
+}
+
 char *uint2dec(uint32_t value)
 {
 	/* Biggest number is 4294967295 (10 digits) */

@@ -25,6 +25,7 @@ networkConfig netConfiguration;
 
 int networkInit();
 void printIP(uint8_t IPAddress[]);
+void printMAC(uint8_t MACAddress[]);
 int ARPRequest(uint8_t IPAddress[]/*, uint8_t DestMAC[]*/);
 
 #endif

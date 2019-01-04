@@ -20,7 +20,7 @@ extern volatile uint32_t __heap_start;
 void main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	uint8_t IPAddress[] = {192, 168, 1, 123};
-	uint8_t IPAddressPC[] = {192, 168, 1, 114};
+	uint8_t IPAddressPC[] = {192, 168, 1, 2};
 	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 	/*Declare as unused*/
@@ -61,7 +61,9 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printIP(netConfiguration.GatewayAddress);
 	console_puts("\n\n Subnet Mask: ");
 	printIP(netConfiguration.SubnetMask);
-	
+	console_puts("\n\n MAC address: ");
+	printMAC(netConfiguration.MACAddress);
+
 	int flag = 0;
 	while (1)
 	{
