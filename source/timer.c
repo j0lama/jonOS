@@ -5,6 +5,8 @@
 #include "stdint.h"
 #include "uart.h"
 
+extern void DelayLoop (unsigned nCount);
+
 typedef struct
 {
     uint8_t timer0_matched: 1;

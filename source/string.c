@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "stddef.h"
 
 char *uint2hex(uint32_t value)
 {
@@ -34,4 +35,12 @@ char *uint2dec(uint32_t value)
 	}
 	buffer[10] = 0;
 	return &buffer[offset];
+}
+
+size_t strlen (const char *string)
+{
+	size_t nResult = 0;
+	while (*string++)
+		nResult++;
+	return nResult;
 }

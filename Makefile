@@ -23,8 +23,11 @@ SOURCE_DIRECTORY = source/
 # Directory of the header files
 INCLUDE_DIRECTORY = include/
 
-# External library for ethernet support
-LIB_DIRECTORY = lib/
+# Directory with sources for ethernet support
+EXT_LIB_DIRECTORY = external/
+
+# USPi Library with enviroment
+USPi = $(EXT_LIB_DIRECTORY)libuspi.a $(EXT_LIB_DIRECTORY)libuspienv.a
 
 # Name of the output image file
 TARGET = $(NAME).img
@@ -36,8 +39,8 @@ MAP_FILE = $(NAME).map
 LINKER_FILE = linker.ld
 
 # Flags for compilation
-FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O0 -Wall -Wextra -pedantic 
-FLAGS_S = -mcpu=arm1176jzf-s -fpic -ffreestanding -c
+FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O0 -Wall -Wextra -pedantic -mfloat-abi=hard
+FLAGS_S = -mcpu=arm1176jzf-s -fpic -ffreestanding -c -mfloat-abi=hard
 
 # Listing source files
 CFILES = $(wildcard $(SOURCE_DIRECTORY)*.c)
@@ -57,9 +60,9 @@ $(TARGET): $(BUILD_DIRECTORY) $(OBJECT_DIRECTORY) $(BUILD_DIRECTORY)$(ELF)
 	@echo "Compilation done"
 
 # Rule to build the elf file
-$(BUILD_DIRECTORY)$(ELF): LIB_USPI $(OBJECTS)
+$(BUILD_DIRECTORY)$(ELF): $(OBJECTS)
 	@echo "Linking objects..."
-	@$(ARM_TOOLCHAIN)-ld --no-undefined $(OBJECTS) -Map $(MAP_FILE) -o $(BUILD_DIRECTORY)$(ELF) -T $(LINKER_FILE)
+	@$(ARM_TOOLCHAIN)-ld --no-undefined $(OBJECTS) $(USPi) -Map $(MAP_FILE) -o $(BUILD_DIRECTORY)$(ELF) -T $(LINKER_FILE)
 
 # Build .c files
 $(OBJECT_DIRECTORY)%.o: $(SOURCE_DIRECTORY)%.c
@@ -77,9 +80,6 @@ $(BUILD_DIRECTORY):
 $(OBJECT_DIRECTORY):
 	@mkdir objects
 
-LIB_USPI:
-	@echo "Building Ethernet Library..."
-	$(MAKE) -C $(LIB_DIRECTORY)
 
 .PHONY: clean
 
@@ -87,7 +87,6 @@ LIB_USPI:
 clean:
 	@rm -f $(TARGET) $(MAP_FILE) jonOS.img
 	@rm -rf $(BUILD_DIRECTORY) $(OBJECT_DIRECTORY)
-	$(MAKE) -C $(LIB_DIRECTORY) clean
 	@echo "Clean done"
 
 # Run a HTTP Server to send the kernel to the emulator

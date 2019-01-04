@@ -13,6 +13,8 @@ SECTIONS
     }
     . = ALIGN(4096); /* align to page size */
     __text_end = .;
+
+    _etext = .; /*Required by USPi enviroment*/
  
     __rodata_start = .;
     .rodata :
