@@ -49,7 +49,7 @@ void gpu_init(uint8_t char_size)
 
 void move_cursor()
 {
-	register uint32_t rowsize = framebuffer.pitch * CHARSIZE_Y; /* (BytesPerLine)*lineHeight */
+	register uint32_t rowsize = framebuffer.pitch * CHARSIZE_Y*console.char_size; /* (BytesPerLine)*lineHeight*characterSize */
 	uint32_t src;
 	console.x = 0;
 	console.y++;
@@ -60,6 +60,7 @@ void move_cursor()
 		memcpy((void *)framebuffer.screenbase, (void *)src, (framebuffer.max_y-1)*rowsize);
 		/*Clean last line*/
 		bzero((void *)(framebuffer.screenbase + (framebuffer.max_y-1)*rowsize), rowsize);
+		console.y--;
 	}
 }
 

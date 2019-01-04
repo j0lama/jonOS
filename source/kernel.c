@@ -6,6 +6,7 @@
 #include "framebuffer.h"
 #include "gpu.h"
 #include "network.h"
+#include "uspios.h"
 
 extern volatile uint32_t __binary_function;
 extern volatile uint32_t __heap_start;
@@ -19,6 +20,7 @@ extern volatile uint32_t __heap_start;
 void main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	uint8_t IPAddress[] = {192, 168, 1, 123};
+	uint8_t IPAddressPC[] = {192, 168, 1, 114};
 	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 	/*Declare as unused*/
@@ -59,8 +61,24 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printIP(netConfiguration.GatewayAddress);
 	console_puts("\n\n Subnet Mask: ");
 	printIP(netConfiguration.SubnetMask);
-
-	while (1);
+	
+	int flag = 0;
+	while (1)
+	{
+		MsDelay(1000);
+		ARPRequest(IPAddressPC);
+		if(flag == 1)
+		{
+			set_foreground_color(GREEN);
+			flag = 0;
+		}
+		else
+		{
+			set_foreground_color(RED);
+			flag = 1;
+		}
+		console_puts("\n\n ARP Request send");
+	}
 	/*
 	uint8_t code [] = "\x70\x40\x2D\xE9\x0C\x50\x9F\xE5\x0C\x40\x9F\xE5\x05\x00\xA0\xE1\x34\xFF\x2F\xE1\xFC\xFF\xFF\xEA\xB8\x7F\x00\x00\x48\x82\x00\x00";
 

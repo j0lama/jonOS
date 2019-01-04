@@ -6,13 +6,11 @@
 #include "uspios.h"
 #include "uart.h"
 #include "stdint.h"
-#include "uspienv/util.h"
 #include "uspienv/macros.h"
 #include "uspienv/types.h"
 #include "gpu.h"
 #include "string.h"
-
-#define	IP_ADDRESS		{192, 168, 1, 123}	/*Valid IP in your LAN*/
+#include "stdlib.h"
 
 
 typedef struct IPHeader
@@ -41,25 +39,20 @@ typedef struct EthernetHeader
 {
 	uint8_t	MACReceiver[MAC_ADDRESS_SIZE];
 	uint8_t	MACSender[MAC_ADDRESS_SIZE];
-	uint16_t	nProtocolType;
-	#define ETH_PROT_ARP		0x806
+	uint16_t ProtocolType;
 } PACKED EthernetHeader;
 
 typedef struct ARPPacket
 {
-	uint16_t		nHWAddressSpace;
-	#define HW_ADDR_ETHER		1
-	uint16_t		nProtocolAddressSpace;
-	#define PROT_ADDR_IP		0x800
-	uint8_t		nHWAddressLength;
-	uint8_t		nProtocolAddressLength;
-	uint16_t		nOPCode;
-	#define ARP_REQUEST		1
-	#define ARP_REPLY		2
-	uint8_t		HWAddressSender[MAC_ADDRESS_SIZE];
-	uint8_t		ProtocolAddressSender[IP_ADDRESS_SIZE];
-	uint8_t		HWAddressTarget[MAC_ADDRESS_SIZE];
-	uint8_t		ProtocolAddressTarget[IP_ADDRESS_SIZE];
+	uint16_t HardwareType;
+	uint16_t ProtocolType;
+	uint8_t	HardwareLength;
+	uint8_t	ProtocolLength;
+	uint16_t OPCode;
+	uint8_t	MACAddressSender[MAC_ADDRESS_SIZE];
+	uint8_t	ProtocolAddressSender[IP_ADDRESS_SIZE];
+	uint8_t	MACAddressTarget[MAC_ADDRESS_SIZE];
+	uint8_t	ProtocolAddressTarget[IP_ADDRESS_SIZE];
 } PACKED ARPPacket;
 
 typedef struct ARPFrame
@@ -67,6 +60,8 @@ typedef struct ARPFrame
 	EthernetHeader Ethernet;
 	ARPPacket	ARP;
 } PACKED ARPFrame;
+
+static const uint8_t BroadcastMAC[] = BROADCAST_MAC;
 
 /*Auxiliary functions for debbugging prupose*/
 void printIP(uint8_t IPAddress[])
@@ -129,7 +124,25 @@ int recvFrame(void * buffer, uint32_t * buffer_length)
 	return USPiReceiveFrame (buffer, buffer_length);
 }
 
-int ARPRequest()
+int ARPRequest(uint8_t IPAddress[]/*, uint8_t DestMAC[]*/)
 {
+	ARPFrame arp_frame;
+	/*Building the Ethernet header*/
+	memcpy(arp_frame.Ethernet.MACReceiver, BroadcastMAC, MAC_ADDRESS_SIZE);
+	memcpy(arp_frame.Ethernet.MACSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE);
+	arp_frame.Ethernet.ProtocolType = ETHERNET_ARP;
+	//Building the ARP Request message
+	arp_frame.ARP.HardwareType = HTYPE;
+	arp_frame.ARP.ProtocolType = IPV4;
+	arp_frame.ARP.HardwareLength = MAC_ADDRESS_SIZE;
+	arp_frame.ARP.ProtocolLength = IP_ADDRESS_SIZE;
+	arp_frame.ARP.OPCode = ARP_REQUEST; /*Request*/
+	memcpy(arp_frame.ARP.MACAddressSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE); /*Our MAC*/
+	memcpy(arp_frame.ARP.ProtocolAddressSender, netConfiguration.IPAddress, IP_ADDRESS_SIZE); /*Our IP*/
+	bzero(arp_frame.ARP.MACAddressTarget, MAC_ADDRESS_SIZE);
+	memcpy(arp_frame.ARP.ProtocolAddressTarget, IPAddress, IP_ADDRESS_SIZE); /*Requested IP*/
+
+	/*Send the ARP Request*/
+	sendFrame((const void *)&arp_frame, sizeof(arp_frame));
 	return 0;
 }
