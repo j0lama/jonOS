@@ -6,6 +6,7 @@
 #include "uspios.h"
 #include "uart.h"
 #include "stdint.h"
+#include "stddef.h"
 #include "uspienv/macros.h"
 #include "uspienv/types.h"
 #include "gpu.h"
@@ -22,9 +23,9 @@ typedef struct IPHeader
     uint16_t flags:4, offset:12;
     uint8_t ttl;
     uint8_t protocol;
-    uint16_t checksum;  //2 Byte
-    uint32_t ip_src;        //4 Byte
-    uint32_t ip_dst;        //4 Byte
+    uint16_t checksum;
+    uint32_t ip_src;
+    uint32_t ip_dst;
 } PACKED IPHeader;
 
 typedef struct UDPHeader
@@ -63,7 +64,7 @@ typedef struct ARPFrame
 
 static const uint8_t BroadcastMAC[] = BROADCAST_MAC;
 
-/*Auxiliary functions for debbugging prupose*/
+/*Auxiliary functions for debugging prupose*/
 void printIP(uint8_t IPAddress[])
 {
 	uint8_t i;
@@ -74,6 +75,7 @@ void printIP(uint8_t IPAddress[])
 		console_puts(uint2dec((uint32_t)IPAddress[i]));
 	}
 }
+
 void printMAC(uint8_t MACAddress[])
 {
 	uint8_t i;
@@ -102,7 +104,6 @@ void dumpPacket(uint8_t * packet, uint32_t size)
 		i++;
 		j++;
 	}
-
 }
 
 int networkInit(uint8_t IPAddress[], uint8_t GatewayAddress[], uint8_t SubnetMask[])
@@ -154,12 +155,42 @@ int recvFrame(void * buffer, uint32_t * buffer_length)
 	return USPiReceiveFrame (buffer, buffer_length);
 }
 
-int ARPRequest(uint8_t IPAddress[]/*, uint8_t DestMAC[]*/)
+Boolean validARPRequest(uint8_t * frame)
+{
+	ARPFrame * arp_request;
+	arp_request = (ARPFrame *) frame;
+	/*Check if its a ARP Reply packet*/
+	if (   arp_request->Ethernet.ProtocolType != BE(ETHERNET_ARP)
+	    || arp_request->ARP.HardwareType != BE(HTYPE)
+	    || arp_request->ARP.ProtocolType != BE(IPV4)
+	    || arp_request->ARP.HardwareLength != MAC_ADDRESS_SIZE
+	    || arp_request->ARP.ProtocolLength != IP_ADDRESS_SIZE
+	    || arp_request->ARP.OPCode != BE(ARP_REQUEST))
+		return FALSE;
+	return TRUE;
+}
+
+Boolean validARPReplay(uint8_t * frame)
+{
+	ARPFrame * arp_reply;
+	arp_reply = (ARPFrame *) frame;
+	/*Check if its a ARP Reply packet*/
+	if (   arp_reply->Ethernet.ProtocolType != BE(ETHERNET_ARP)
+	    || arp_reply->ARP.HardwareType != BE(HTYPE)
+	    || arp_reply->ARP.ProtocolType != BE(IPV4)
+	    || arp_reply->ARP.HardwareLength != MAC_ADDRESS_SIZE
+	    || arp_reply->ARP.ProtocolLength != IP_ADDRESS_SIZE
+	    || arp_reply->ARP.OPCode != BE(ARP_REPLY))
+		return FALSE;
+	return TRUE;
+}
+
+int ARPRequest(uint8_t IPAddress[], uint8_t DestMAC[])
 {
 	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
 	uint32_t buffer_length;
 	ARPFrame arp_frame;
-	ARPFrame * arp_reply;
+
 	/*Building the Ethernet header*/
 	memcpy(arp_frame.Ethernet.MACReceiver, BroadcastMAC, MAC_ADDRESS_SIZE);
 	memcpy(arp_frame.Ethernet.MACSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE);
@@ -178,7 +209,7 @@ int ARPRequest(uint8_t IPAddress[]/*, uint8_t DestMAC[]*/)
 	/*Send the ARP Request*/
 	sendFrame((const void *)&arp_frame, sizeof(arp_frame));
 
-	console_puts("\n\n ARP Request sended");
+	console_puts("\n\n ARP Request sent");
 	dumpPacket((uint8_t *)&arp_frame, sizeof(arp_frame));
 
 	/*Wait to the ARP Replay*/
@@ -190,34 +221,72 @@ int ARPRequest(uint8_t IPAddress[]/*, uint8_t DestMAC[]*/)
 		console_puts("\n\n Packet size: ");
 		console_puts(uint2dec(buffer_length));
 
-		arp_reply = (ARPFrame *) buffer;
-
 		if(buffer_length <= 60)
 		{
-			dumpPacket((uint8_t *)arp_reply, buffer_length);
+			dumpPacket(buffer, buffer_length);
 		}
 
 		/*Check if its a ARP Reply packet*/
-		if (   arp_reply->Ethernet.ProtocolType != BE(ETHERNET_ARP)
-		    || arp_reply->ARP.HardwareType != BE(HTYPE)
-		    || arp_reply->ARP.ProtocolType != BE(IPV4)
-		    || arp_reply->ARP.HardwareLength != MAC_ADDRESS_SIZE
-		    || arp_reply->ARP.ProtocolLength != IP_ADDRESS_SIZE
-		    || arp_reply->ARP.OPCode != BE(ARP_REPLY))
+		if(validARPReplay(buffer) == FALSE)
 		{
 			console_puts("\n\n Invalid ARP Reply packet");
 			continue;
 		}
-
-		console_puts("\n\n IP Replayed: ");
-		printIP(arp_reply->ARP.ProtocolAddressSender);
-		console_puts("\n\n MAC Replayed: ");
-		printMAC(arp_reply->ARP.MACAddressSender);
-
-
+		else
+			break; /*Valid ARP Reply*/
 	}
 
-	/*Copy the frame to a ARPFrame structure*/
+	/*Copy the MAC Address replayed*/
+	memcpy(DestMAC, ((ARPFrame*)buffer)->ARP.MACAddressSender, MAC_ADDRESS_SIZE);
 
 	return 0;
+}
+
+int ARPReplay(void * buffer)
+{
+	ARPFrame * arp_frame;
+
+	/*Check if its a ARP Request packet*/
+	if(validARPRequest(buffer) == FALSE)
+		return 1; /*Invalid ARP Request packet*/
+
+	/*Building the ARP Replay message*/
+	arp_frame = (ARPFrame *) buffer;
+		
+	if (memcmp (arp_frame->ARP.ProtocolAddressTarget, netConfiguration.IPAddress, IP_ADDRESS_SIZE) != 0)
+		return 1; /*ARP Request is not for us*/
+
+	/* Prepare reply packet */
+	/*Ethernet layer*/
+	memcpy(arp_frame->Ethernet.MACReceiver, arp_frame->ARP.MACAddressSender, MAC_ADDRESS_SIZE);
+	memcpy(arp_frame->Ethernet.MACSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE);
+
+	/*ARP layer*/
+	arp_frame->ARP.OPCode = BE(ARP_REPLY);
+	memcpy(arp_frame->ARP.MACAddressTarget, arp_frame->ARP.MACAddressSender, MAC_ADDRESS_SIZE);
+	memcpy(arp_frame->ARP.ProtocolAddressTarget, arp_frame->ARP.ProtocolAddressSender, IP_ADDRESS_SIZE);
+	memcpy(arp_frame->ARP.MACAddressSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE);
+	memcpy(arp_frame->ARP.ProtocolAddressSender, netConfiguration.IPAddress, IP_ADDRESS_SIZE);
+
+	/*Send the ARP Request*/
+	sendFrame((const void *)arp_frame, sizeof( *arp_frame));
+
+	return 0; /*ARP Replay sent correctly*/
+}
+
+PACKET_TYPE recv(void * buffer, size_t * buffer_length)
+{
+	while(1)
+	{
+		if(!recvFrame(buffer, buffer_length)) /*While no frame is available continue waiting for one*/
+			continue;
+
+		if(ARPReplay(buffer) == 0) /*If the frame is a ARP Request still waiting for a new one*/
+			continue;
+
+		break; /*No ARP Frame received*/
+	}
+
+	/*Identify the packet*/
+	return UNKNOWN_PACKET;
 }

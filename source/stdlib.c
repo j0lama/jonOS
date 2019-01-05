@@ -18,6 +18,22 @@ void memcpy(void * dest, const void * src, register size_t len)
     }
 }
 
+int memcmp (const void * buffer1, const void * buffer2, size_t nLength)
+{
+	const unsigned char *p1 = (const unsigned char *) buffer1;
+	const unsigned char *p2 = (const unsigned char *) buffer2;
+	
+	while (nLength--)
+	{
+		if (*p1 != *p2)
+			return 1;
+		p1++;
+		p2++;
+	}
+
+	return 0;
+}
+
 void bzero(void * dest, register size_t len)
 {
     memset(dest, 0, len);

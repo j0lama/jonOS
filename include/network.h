@@ -1,6 +1,7 @@
 #ifndef NETWORK_H
 #define NETWORK_H
 #include "stdint.h"
+#include "stddef.h"
 
 #define ETHERNET_ARP 0x806
 #define IPV4 0x800
@@ -13,6 +14,13 @@
 #define IPHEADER_SIZE	20
 #define UDPHEADER_SIZE	8
 
+/*Types of packets*/
+typedef enum PACKET_TYPE
+{
+	UDP_PACKET,
+	UNKNOWN_PACKET
+} PACKET_TYPE;
+
 typedef struct networkConfig
 {
 	uint8_t IPAddress[4];
@@ -24,8 +32,12 @@ typedef struct networkConfig
 networkConfig netConfiguration;
 
 int networkInit();
+int ARPRequest(uint8_t IPAddress[], uint8_t DestMAC[]);
+PACKET_TYPE recv(void * buffer, size_t * buffer_length);
+
+/*Debugging functions*/
 void printIP(uint8_t IPAddress[]);
 void printMAC(uint8_t MACAddress[]);
-int ARPRequest(uint8_t IPAddress[]/*, uint8_t DestMAC[]*/);
+void dumpPacket(uint8_t * packet, uint32_t size);
 
 #endif
