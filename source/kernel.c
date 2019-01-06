@@ -23,8 +23,10 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 
-	uint8_t IPAddressPC[] = {192, 168, 1, 2};
+	uint8_t IPAddressPC[] = {192, 168, 1, 114};
 	uint8_t	MACAddressReplayed[MAC_ADDRESS_SIZE];
+	uint8_t MACDest[] = {0x74, 0x85, 0x2a, 0x1c, 0x68, 0xeb};
+	uint8_t MACBroadcast[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 	/*Declare as unused*/
 	(void) r0;
 	(void) r1;
@@ -66,24 +68,32 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	console_puts("\n\n MAC address: ");
 	printMAC(netConfiguration.MACAddress);
 
-	//int flag = 0;
-	//while (1)
-	//{
-	//	MsDelay(1000);
-	//	ARPRequest(IPAddressPC, MACAddressReplayed);
-	//	if(flag == 1)
-	//	{
-	//		set_foreground_color(GREEN);
-	//		flag = 0;
-	//	}
-	//	else
-	//	{
-	//		set_foreground_color(RED);
-	//		flag = 1;
-	//	}
-	//	console_puts("\n\n MAC Replayed: ");
-	//	printMAC(MACAddressReplayed);
-	//}
+	int flag = 0;
+	while (1)
+	{
+		MsDelay(1000);
+		ARPRequest(IPAddressPC, MACAddressReplayed);
+		if(flag == 1)
+		{
+			set_foreground_color(GREEN);
+			flag = 0;
+		}
+		else
+		{
+			set_foreground_color(RED);
+			flag = 1;
+		}
+		console_puts("\n\n MAC Replayed: ");
+		printMAC(MACAddressReplayed);
+		set_foreground_color(WHITE);
+	}
+
+	while(1)
+	{
+		MsDelay(3000);
+		sendMessage(MACBroadcast, "Arriba Espana");
+		console_puts("\n\n Message sent");
+	}
 
 	uint8_t buffer[1600];
 	size_t buffer_length;
@@ -91,7 +101,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	while(1) /*Test ARP Replay */
 	{
 		recv((void *) buffer, &buffer_length);
-		console_puts("\n\n Message received");
+		console_puts("\n\n Unknown Message received");
 	}
 	/*
 	uint8_t code [] = "\x70\x40\x2D\xE9\x0C\x50\x9F\xE5\x0C\x40\x9F\xE5\x05\x00\xA0\xE1\x34\xFF\x2F\xE1\xFC\xFF\xFF\xEA\xB8\x7F\x00\x00\x48\x82\x00\x00";

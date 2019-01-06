@@ -13,6 +13,8 @@
 #include "string.h"
 #include "stdlib.h"
 
+#define ARP_TABLE_LEN	16
+
 
 typedef struct IPHeader
 {
@@ -61,6 +63,46 @@ typedef struct ARPFrame
 	EthernetHeader Ethernet;
 	ARPPacket	ARP;
 } PACKED ARPFrame;
+
+
+/*ARP Table structure and functions*/
+typedef struct ARPTable
+{
+	uint8_t IP[ARP_TABLE_LEN][IP_ADDRESS_SIZE];
+	uint8_t MAC[ARP_TABLE_LEN][MAC_ADDRESS_SIZE];
+	uint8_t position;
+	Boolean full;
+} ARPTable;
+ARPTable arp_table;
+
+uint8_t * getMACAddress(uint8_t IPAddress[])
+{
+	uint8_t i, limit;
+	if(arp_table.full == TRUE)
+		limit = ARP_TABLE_LEN;
+	else
+		limit = arp_table.position;
+
+	for(i = 0; i < limit; i++)
+	{
+		if(memcmp(arp_table.IP[i], IPAddress, IP_ADDRESS_SIZE) == 0)
+			return arp_table.MAC[i];
+	}
+	return NULL;
+}
+
+void setMACAddress(uint8_t IPAddress[], uint8_t MACAddress[])
+{
+	memcpy(arp_table.IP[arp_table.position], IPAddress, IP_ADDRESS_SIZE);
+	memcpy(arp_table.MAC[arp_table.position], MACAddress, MAC_ADDRESS_SIZE);
+	arp_table.position++;
+	if(arp_table.position >= 16)
+	{
+		arp_table.position = 0;
+		arp_table.full = TRUE;
+	}
+}
+
 
 static const uint8_t BroadcastMAC[] = BROADCAST_MAC;
 
@@ -140,19 +182,11 @@ int networkInit(uint8_t IPAddress[], uint8_t GatewayAddress[], uint8_t SubnetMas
 		nTimeout = 0;
 		uart_puts("Link is down\r\n");
 	}
+
+	/*Init the ARP Table to zeros*/
+	bzero((void *)&arp_table, sizeof(ARPTable));
+
 	return 0;
-}
-
-int sendFrame(const void * buffer, uint32_t buffer_length)
-{
-	/* Returns 0 on failure */
-	return USPiSendFrame(buffer, buffer_length);
-}
-
-int recvFrame(void * buffer, uint32_t * buffer_length)
-{
-	/* Returns 0 if no frame is available or on failure */
-	return USPiReceiveFrame (buffer, buffer_length);
 }
 
 Boolean validARPRequest(uint8_t * frame)
@@ -185,11 +219,75 @@ Boolean validARPReplay(uint8_t * frame)
 	return TRUE;
 }
 
-int ARPRequest(uint8_t IPAddress[], uint8_t DestMAC[])
+/*Function that gets the IP header checksum*/
+void calcChecksum(uint16_t longitud, uint8_t *datos, uint8_t *checksum) {
+	uint16_t word16;
+	uint32_t sum=0;
+	uint32_t i;
+
+	for (i=0; i<longitud; i=i+2) /* Make 16 bit words out of every two adjacent 8 bit words in the packet and add them up*/
+	{
+	    word16 = (datos[i]<<8) + datos[i+1];
+	    sum += (uint32_t)word16;       
+	}
+	while (sum>>16) /* Take only 16 bits out of the 32 bit sum and add up the carries */
+	    sum = (sum & 0xFFFF)+(sum >> 16);
+	sum = ~sum; /* One's complement the result */  
+	checksum[0] = sum >> 8;
+	checksum[1] = sum & 0xFF;
+	return;
+}
+
+int sendFrame(const void * buffer, uint32_t buffer_length)
+{
+	/* Returns 0 on failure */
+	return USPiSendFrame(buffer, buffer_length);
+}
+
+int recvFrame(void * buffer, uint32_t * buffer_length)
+{
+	/* Returns 0 if no frame is available or on failure */
+	return USPiReceiveFrame (buffer, buffer_length);
+}
+
+void sendEthernet(uint8_t DestMAC[], void * buffer, uint32_t buffer_length)
+{
+	/*Building the Ethernet header*/
+	memcpy(((EthernetHeader*)buffer)->MACReceiver, DestMAC, MAC_ADDRESS_SIZE);
+	memcpy(((EthernetHeader*)buffer)->MACSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE);
+	((EthernetHeader*)buffer)->ProtocolType = BE(ETHERNET_ARP);
+	sendFrame(buffer, buffer_length);
+}
+
+
+
+
+void sendMessage(uint8_t DestMAC[], void * msg)
+{
+	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
+	int len = strlen ((const char *) msg);
+	memcpy((buffer+sizeof(EthernetHeader)), msg, len);
+	sendEthernet(DestMAC, buffer, len+sizeof(EthernetHeader));
+}
+
+
+
+
+
+int ARPRequest(uint8_t IPAddress[], uint8_t * DestMAC)
 {
 	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
 	uint32_t buffer_length;
 	ARPFrame arp_frame;
+	uint8_t * MACAddressTable;
+
+	/*Check if the IP is cached in the ARP Table*/
+	MACAddressTable = getMACAddress(IPAddress);
+	if(MACAddressTable != NULL) /*If is cached, return the MAC Address*/
+	{
+		memcpy(DestMAC, MACAddressTable, MAC_ADDRESS_SIZE);
+		return 0;
+	}
 
 	/*Building the Ethernet header*/
 	memcpy(arp_frame.Ethernet.MACReceiver, BroadcastMAC, MAC_ADDRESS_SIZE);
@@ -235,6 +333,9 @@ int ARPRequest(uint8_t IPAddress[], uint8_t DestMAC[])
 		else
 			break; /*Valid ARP Reply*/
 	}
+
+	/*Cache the MAC Address*/
+	setMACAddress(IPAddress, ((ARPFrame*)buffer)->ARP.MACAddressSender);
 
 	/*Copy the MAC Address replayed*/
 	memcpy(DestMAC, ((ARPFrame*)buffer)->ARP.MACAddressSender, MAC_ADDRESS_SIZE);

@@ -18,7 +18,7 @@ void memcpy(void * dest, const void * src, register size_t len)
     }
 }
 
-int memcmp (const void * buffer1, const void * buffer2, size_t nLength)
+int memcmp(const void * buffer1, const void * buffer2, size_t nLength)
 {
 	const unsigned char *p1 = (const unsigned char *) buffer1;
 	const unsigned char *p2 = (const unsigned char *) buffer2;

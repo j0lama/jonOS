@@ -32,8 +32,11 @@ typedef struct networkConfig
 networkConfig netConfiguration;
 
 int networkInit();
-int ARPRequest(uint8_t IPAddress[], uint8_t DestMAC[]);
+int ARPRequest(uint8_t IPAddress[], uint8_t * DestMAC);
 PACKET_TYPE recv(void * buffer, size_t * buffer_length);
+
+/*TEST*/
+void sendMessage(uint8_t DestMAC[], void * msg);
 
 /*Debugging functions*/
 void printIP(uint8_t IPAddress[]);
