@@ -68,32 +68,31 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	console_puts("\n\n MAC address: ");
 	printMAC(netConfiguration.MACAddress);
 
-	int flag = 0;
-	while (1)
-	{
-		MsDelay(1000);
-		ARPRequest(IPAddressPC, MACAddressReplayed);
-		if(flag == 1)
-		{
-			set_foreground_color(GREEN);
-			flag = 0;
-		}
-		else
-		{
-			set_foreground_color(RED);
-			flag = 1;
-		}
-		console_puts("\n\n MAC Replayed: ");
-		printMAC(MACAddressReplayed);
-		set_foreground_color(WHITE);
-	}
-
-	while(1)
-	{
-		MsDelay(3000);
-		sendMessage(MACBroadcast, "Arriba Espana");
-		console_puts("\n\n Message sent");
-	}
+	//int flag = 0;
+	//while (1)
+	//{
+	//	MsDelay(1000);
+	//	ARPRequest(IPAddressPC, MACAddressReplayed);
+	//	if(flag == 1)
+	//	{
+	//		set_foreground_color(GREEN);
+	//		flag = 0;
+	//	}
+	//	else
+	//	{
+	//		set_foreground_color(RED);
+	//		flag = 1;
+	//	}
+	//	console_puts("\n\n MAC Replayed: ");
+	//	printMAC(MACAddressReplayed);
+	//	set_foreground_color(WHITE);
+	//}
+	//while(1)
+	//{
+	//	MsDelay(3000);
+	//	sendMessage(MACBroadcast, "Arriba Espana");
+	//	console_puts("\n\n Message sent");
+	//}
 
 	uint8_t buffer[1600];
 	size_t buffer_length;

@@ -377,12 +377,13 @@ int ARPReplay(void * buffer)
 
 PACKET_TYPE recv(void * buffer, size_t * buffer_length)
 {
+	uint8_t frame[USPI_FRAME_BUFFER_SIZE];
 	while(1)
 	{
-		if(!recvFrame(buffer, buffer_length)) /*While no frame is available continue waiting for one*/
+		if(!recvFrame(frame, buffer_length)) /*While no frame is available continue waiting for one*/
 			continue;
 
-		if(ARPReplay(buffer) == 0) /*If the frame is a ARP Request still waiting for a new one*/
+		if(ARPReplay(frame) == 0) /*If the frame is a ARP Request still waiting for a new one*/
 			continue;
 
 		break; /*No ARP Frame received*/
