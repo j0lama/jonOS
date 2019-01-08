@@ -41,6 +41,7 @@ void sendMessage(uint8_t DestMAC[], void * msg);
 /*Debugging functions*/
 void printIP(uint8_t IPAddress[]);
 void printMAC(uint8_t MACAddress[]);
+void printARPTable();
 void dumpPacket(uint8_t * packet, uint32_t size);
 
 #endif
