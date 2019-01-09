@@ -22,12 +22,12 @@ typedef struct IPHeader
     uint8_t type_of_service;
     uint16_t length;
     uint16_t identifier;
-    uint16_t flags:4, offset:12;
+    uint16_t flags_offset;
     uint8_t ttl;
     uint8_t protocol;
     uint16_t checksum;
-    uint32_t ip_src;
-    uint32_t ip_dst;
+    uint8_t ip_src[IP_ADDRESS_SIZE];
+    uint8_t ip_dst[IP_ADDRESS_SIZE];
 } PACKED IPHeader;
 
 typedef struct UDPHeader
@@ -379,31 +379,17 @@ int ARPReplay(void * buffer)
 	return 0; /*ARP Replay sent correctly*/
 }
 
-int sendEthernet(uint8_t DestMAC[], void * frame, uint32_t frame_length)
+int sendEthernet(uint8_t DestMAC[], void * frame, uint32_t frame_length, uint16_t ProtocolType)
 {
 	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
 	/*Building the Ethernet header*/
 	memcpy(((EthernetHeader*)buffer)->MACReceiver, DestMAC, MAC_ADDRESS_SIZE);
 	memcpy(((EthernetHeader*)buffer)->MACSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE);
-	((EthernetHeader*)buffer)->ProtocolType = BE(ETHERNET_ARP);
+	((EthernetHeader*)buffer)->ProtocolType = BE(ProtocolType);
 
 	memcpy(buffer + ETHERNET_HEADER_SIZE, frame, frame_length); /*Copy the frame to the final structure*/
 	return sendFrame(buffer, frame_length + ETHERNET_HEADER_SIZE);
 }
-
-typedef struct IPHeader
-{
-    uint8_t version_ihl;
-    uint8_t type_of_service;
-    uint16_t length;
-    uint16_t identifier;
-    uint16_t flags:4, offset:12;
-    uint8_t ttl;
-    uint8_t protocol;
-    uint16_t checksum;
-    uint32_t ip_src;
-    uint32_t ip_dst;
-} PACKED IPHeader;
 
 /*Simple IP implementation with no options field*/
 int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght)
@@ -412,6 +398,8 @@ int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght)
 	uint8_t IPSrcMask[IP_ADDRESS_SIZE];
 	uint8_t IPDestMask[IP_ADDRESS_SIZE];
 	uint8_t DestMAC[MAC_ADDRESS_SIZE];
+	uint32_t len = ((USPI_FRAME_BUFFER_SIZE - IP_HEADER_SIZE)/8)*8;
+	uint16_t offset = 0;
 	IPHeader * ip_header;
 
 	ip_header = (IPHeader *) buffer;
@@ -430,13 +418,43 @@ int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght)
 	ip_header->type_of_service = IP_TOS; /* Basic ToS */
 	ip_header->identifier = BE(IP_ID); /* IP identifier */
 	ip_header->ttl = IP_TTL; /* Setting the Time To Live */
+	ip_header->protocol = IP_DATA_PROTOCOL; /* Setting the data protocol */
+	ip_header->checksum = 0x0000; /* Setting by default the checksum to 0 */
 
+	/* Copy IPSrc and DestIP to the header */
+	memcpy(ip_header->ip_src, netConfiguration.IPAddress, IP_ADDRESS_SIZE); /* Our IP */
+	memcpy(ip_header->ip_dst, DestIP, IP_ADDRESS_SIZE); /* DestIP */
 
+	/* IP fragmentation*/
+	while(segment_lenght + IP_HEADER_SIZE > USPI_FRAME_BUFFER_SIZE)
+	{
+		segment_lenght -= len;
+		ip_header->length = BE(len + IP_HEADER_SIZE); /* Setting the IP packet length */
+		ip_header->flags_offset = BE((offset & 0x1fff) | 0x2000); /*Setting Flags (DF = 0, MF = 1) and offset*/
+		/*Copy the fragment*/
+		memcpy(buffer + IP_HEADER_SIZE, (uint8_t *)segment + offset, len);
+		offset += ((USPI_FRAME_BUFFER_SIZE - IP_HEADER_SIZE)/8); /*Increment the offset*/
+
+		/* Calculate the checksum */
+		calcChecksum(IP_HEADER_SIZE, (uint8_t *)ip_header, (uint8_t *)&ip_header->checksum);
+
+		/*Send the fragmented package*/
+		sendEthernet(DestMAC, buffer, len + IP_HEADER_SIZE, IPV4);
+		console_puts("CACA");
+	}
+
+	ip_header->length = BE(segment_lenght + IP_HEADER_SIZE); /*Last or unique fragment size*/
+	ip_header->flags_offset = BE(offset & 0x1fff); /*Flags (DF = 0, MF = 0)*/
+	/* Calculate the checksum */
+	calcChecksum(IP_HEADER_SIZE, (uint8_t *)ip_header, (uint8_t *)&ip_header->checksum);
 	/*Copy the segment with the IP header*/
-	memcpy(buffer + IP_HEADER_SIZE, segment, segment_lenght);
-
+	memcpy(buffer + IP_HEADER_SIZE, (uint8_t *)segment + offset, segment_lenght);
+	console_puts("\n\n IP size: ");
+	console_puts(uint2dec(segment_lenght));
+	console_puts("\n\n Dumped IP: ");
+	dumpPacket(buffer, segment_lenght + IP_HEADER_SIZE);
 	/*Send to the Ethernet layer*/
-	return sendEthernet(DestMAC, buffer, segment_lenght + IP_HEADER_SIZE);
+	return sendEthernet(DestMAC, buffer, segment_lenght + IP_HEADER_SIZE, IPV4);
 }
 
 
