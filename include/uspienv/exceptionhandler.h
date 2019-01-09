@@ -29,6 +29,7 @@ extern "C" {
 
 typedef struct TExceptionHandler
 {
+	char * empty; /*Solution to avoid a 'struct has no members' warning*/
 } TExceptionHandler;
 
 void ExceptionHandler2 (TExceptionHandler *pThis);

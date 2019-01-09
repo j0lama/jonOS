@@ -18,7 +18,7 @@
 
 typedef struct IPHeader
 {
-    uint8_t version:4, header_length:4;
+    uint8_t version_ihl;
     uint8_t type_of_service;
     uint16_t length;
     uint16_t identifier;
@@ -258,6 +258,13 @@ void calcChecksum(uint16_t longitud, uint8_t *datos, uint8_t *checksum) {
 	return;
 }
 
+
+void applyMask(uint8_t * IP, uint8_t * mask, uint8_t * IPMasked){
+	uint8_t i;
+	for(i = 0; i < IP_ADDRESS_SIZE; i++)
+		IPMasked[i] = IP[i]&mask[i];
+}
+
 int sendFrame(const void * buffer, uint32_t buffer_length)
 {
 	/* Returns 0 on failure */
@@ -270,30 +277,7 @@ int recvFrame(void * buffer, uint32_t * buffer_length)
 	return USPiReceiveFrame (buffer, buffer_length);
 }
 
-void sendEthernet(uint8_t DestMAC[], void * buffer, uint32_t buffer_length)
-{
-	/*Building the Ethernet header*/
-	memcpy(((EthernetHeader*)buffer)->MACReceiver, DestMAC, MAC_ADDRESS_SIZE);
-	memcpy(((EthernetHeader*)buffer)->MACSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE);
-	((EthernetHeader*)buffer)->ProtocolType = BE(ETHERNET_ARP);
-	sendFrame(buffer, buffer_length);
-}
-
-
-
-
-void sendMessage(uint8_t DestMAC[], void * msg)
-{
-	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
-	int len = strlen ((const char *) msg);
-	memcpy((buffer+sizeof(EthernetHeader)), msg, len);
-	sendEthernet(DestMAC, buffer, len+sizeof(EthernetHeader));
-}
-
-
-
-
-
+/*ARP fucntions*/
 int ARPRequest(uint8_t IPAddress[], uint8_t * DestMAC)
 {
 	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
@@ -395,7 +379,78 @@ int ARPReplay(void * buffer)
 	return 0; /*ARP Replay sent correctly*/
 }
 
-PACKET_TYPE recv(void * buffer, size_t * buffer_length)
+int sendEthernet(uint8_t DestMAC[], void * frame, uint32_t frame_length)
+{
+	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
+	/*Building the Ethernet header*/
+	memcpy(((EthernetHeader*)buffer)->MACReceiver, DestMAC, MAC_ADDRESS_SIZE);
+	memcpy(((EthernetHeader*)buffer)->MACSender, netConfiguration.MACAddress, MAC_ADDRESS_SIZE);
+	((EthernetHeader*)buffer)->ProtocolType = BE(ETHERNET_ARP);
+
+	memcpy(buffer + ETHERNET_HEADER_SIZE, frame, frame_length); /*Copy the frame to the final structure*/
+	return sendFrame(buffer, frame_length + ETHERNET_HEADER_SIZE);
+}
+
+typedef struct IPHeader
+{
+    uint8_t version_ihl;
+    uint8_t type_of_service;
+    uint16_t length;
+    uint16_t identifier;
+    uint16_t flags:4, offset:12;
+    uint8_t ttl;
+    uint8_t protocol;
+    uint16_t checksum;
+    uint32_t ip_src;
+    uint32_t ip_dst;
+} PACKED IPHeader;
+
+/*Simple IP implementation with no options field*/
+int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght)
+{
+	uint8_t buffer[IP_DATAGRAM_SIZE];
+	uint8_t IPSrcMask[IP_ADDRESS_SIZE];
+	uint8_t IPDestMask[IP_ADDRESS_SIZE];
+	uint8_t DestMAC[MAC_ADDRESS_SIZE];
+	IPHeader * ip_header;
+
+	ip_header = (IPHeader *) buffer;
+	/*Building the IP Header*/
+	applyMask(netConfiguration.IPAddress, netConfiguration.SubnetMask, IPSrcMask); /* Applying mask to source IP */
+	applyMask(DestIP, netConfiguration.SubnetMask, IPDestMask); /* Applying mask to source IP */
+
+	/*If IPSrcMask and IPDestMask are equal, it means that are in the same subnet
+	  and the ARP Request is for the DestIP. If not, the ARP Request is for the Gateway*/
+	if(memcmp(IPSrcMask, IPDestMask, IP_ADDRESS_SIZE) == 0) /* Same network */
+		ARPRequest(DestIP, DestMAC);
+	else
+		ARPRequest(netConfiguration.GatewayAddress, DestMAC); /*Diferent network*/
+
+	ip_header->version_ihl = IP_IHL_VERSION; /* Setting version 4 and IHL 5 */
+	ip_header->type_of_service = IP_TOS; /* Basic ToS */
+	ip_header->identifier = BE(IP_ID); /* IP identifier */
+	ip_header->ttl = IP_TTL; /* Setting the Time To Live */
+
+
+	/*Copy the segment with the IP header*/
+	memcpy(buffer + IP_HEADER_SIZE, segment, segment_lenght);
+
+	/*Send to the Ethernet layer*/
+	return sendEthernet(DestMAC, buffer, segment_lenght + IP_HEADER_SIZE);
+}
+
+
+
+
+//void sendMessage(uint8_t DestMAC[], void * msg)
+//{
+//	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
+//	int len = strlen ((const char *) msg);
+//	memcpy((buffer+sizeof(EthernetHeader)), msg, len);
+//	sendEthernet(DestMAC, buffer, len+sizeof(EthernetHeader));
+//}
+
+PACKET_TYPE readPacket(void * buffer, size_t * buffer_length)
 {
 	uint8_t frame[USPI_FRAME_BUFFER_SIZE];
 	while(1)

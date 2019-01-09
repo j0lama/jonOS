@@ -13,6 +13,22 @@
 #define IP_ADDRESS_SIZE		4
 #define IPHEADER_SIZE	20
 #define UDPHEADER_SIZE	8
+#define ETHERNET_HEADER_SIZE 14
+#define IP_HEADER_SIZE 20
+#define IP_IHL_VERSION 0x45
+#define IP_TOS 0x00 /*This can be changed to modify the priority*/
+#define IP_ID 1
+#define IP_TTL 0xEF
+
+/*Other protocol identifiers*/
+/*https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers*/
+#define ICMP_PROTOCOL_ID 0x1
+#define UDP_PROTOCOL_ID 0x11
+#define TCP_PROTOCOL_ID 0x6
+/*https://tools.ietf.org/html/rfc3692#section-2.1*/
+#define CUSTOM_PROTOCOL_ID 0xFC
+#define IP_DATA_PROTOCOL CUSTOM_PROTOCOL_ID
+#define IP_DATAGRAM_SIZE USPI_FRAME_BUFFER_SIZE - ETHERNET_HEADER_SIZE
 
 /*Types of packets*/
 typedef enum PACKET_TYPE
@@ -33,7 +49,7 @@ networkConfig netConfiguration;
 
 int networkInit();
 int ARPRequest(uint8_t IPAddress[], uint8_t * DestMAC);
-PACKET_TYPE recv(void * buffer, size_t * buffer_length);
+//PACKET_TYPE recv(void * buffer, size_t * buffer_length);
 
 /*TEST*/
 void sendMessage(uint8_t DestMAC[], void * msg);
