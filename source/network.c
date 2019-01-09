@@ -148,6 +148,26 @@ void dumpPacket(uint8_t * packet, uint32_t size)
 	}
 }
 
+void printARPTable()
+{
+	uint8_t i, limit;
+	if(arp_table.full == TRUE)
+		limit = ARP_TABLE_LEN;
+	else
+		limit = arp_table.position;
+
+	console_puts("\n\n ARP Table\n ");
+
+	for(i = 0; i < limit; i++)
+	{
+		printIP(arp_table.IP[i]);
+		console_puts(" -> ");
+		printMAC(arp_table.MAC[i]);
+		console_puts("\n ");
+	}
+	console_puts("\n");
+}
+
 int networkInit(uint8_t IPAddress[], uint8_t GatewayAddress[], uint8_t SubnetMask[])
 {
 	if (!USPiEnvInitialize()) /*Error initializing the enviroment required by USPi*/
