@@ -23,7 +23,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 
-	uint8_t IPAddressPC[] = {192, 168, 1, 114};
+	uint8_t IPAddressPC[] = {192, 168, 1, 222};
 	uint8_t	MACAddressReplayed[MAC_ADDRESS_SIZE];
 	uint8_t MACDest[] = {0x74, 0x85, 0x2a, 0x1c, 0x68, 0xeb};
 	uint8_t MACBroadcast[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -38,14 +38,14 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	int ret = networkInit(IPAddress, Gateway, SubnetMask);
 
-	gpu_init(CHAR_SIZE_MEDIUM);
+	gpu_init(CHAR_SIZE_SMALL);
 
 	if(ret != 0)
 		console_puts(" Error in network\n\n");
 
 	uart_puts("Hello from UART\r\n");
 	//timer(5);
-	set_foreground_color(WHITE);
+	set_foreground_color(GREEN);
 	console_puts(" Welcome to jonOS\n\n");
 	console_puts(" Screen base address: ");
 	console_puts(uint2hex(framebuffer.screenbase));
@@ -87,13 +87,11 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	//	printARPTable();
 	//	set_foreground_color(WHITE);
 	//}
-	char cadena[] = "Hola esto es un mensaje de prueba enviado desde jonOS";
-	while(1)
-	{
-		MsDelay(3000);
-		sendIP(IPAddressPC, cadena, strlen(cadena));
-		console_puts("\n\n Message sent");
-	}
+	char str[] = "jonOS UDP Test";
+	MsDelay(3000);
+	sendUDP(IPAddressPC, 12345, str, strlen(str));
+	console_puts("\n\n Message sent");
+	while(1);
 
 	/*
 	uint8_t code [] = "\x70\x40\x2D\xE9\x0C\x50\x9F\xE5\x0C\x40\x9F\xE5\x05\x00\xA0\xE1\x34\xFF\x2F\xE1\xFC\xFF\xFF\xEA\xB8\x7F\x00\x00\x48\x82\x00\x00";

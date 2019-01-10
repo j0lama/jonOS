@@ -311,27 +311,16 @@ int ARPRequest(uint8_t IPAddress[], uint8_t * DestMAC)
 	/*Send the ARP Request*/
 	sendFrame((const void *)&arp_frame, sizeof(arp_frame));
 
-	console_puts("\n\n ARP Request sent");
-	dumpPacket((uint8_t *)&arp_frame, sizeof(arp_frame));
-
 	/*Wait to the ARP Replay*/
 	while(1)
 	{
 		if(!recvFrame((void *)buffer, &buffer_length)) /*While no frame is available continue waiting for one*/
 			continue;
 
-		console_puts("\n\n Packet size: ");
-		console_puts(uint2dec(buffer_length));
-
-		if(buffer_length <= 60)
-		{
-			dumpPacket(buffer, buffer_length);
-		}
-
 		/*Check if its a ARP Reply packet*/
 		if(validARPReplay(buffer) == FALSE)
 		{
-			console_puts("\n\n Invalid ARP Reply packet");
+			/*Invalid ARP Reply packet*/
 			continue;
 		}
 		else
@@ -440,7 +429,6 @@ int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght)
 
 		/*Send the fragmented package*/
 		sendEthernet(DestMAC, buffer, len + IP_HEADER_SIZE, IPV4);
-		console_puts("CACA");
 	}
 
 	ip_header->length = BE(segment_lenght + IP_HEADER_SIZE); /*Last or unique fragment size*/
@@ -449,12 +437,28 @@ int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght)
 	calcChecksum(IP_HEADER_SIZE, (uint8_t *)ip_header, (uint8_t *)&ip_header->checksum);
 	/*Copy the segment with the IP header*/
 	memcpy(buffer + IP_HEADER_SIZE, (uint8_t *)segment + offset, segment_lenght);
-	console_puts("\n\n IP size: ");
-	console_puts(uint2dec(segment_lenght));
-	console_puts("\n\n Dumped IP: ");
-	dumpPacket(buffer, segment_lenght + IP_HEADER_SIZE);
+
 	/*Send to the Ethernet layer*/
 	return sendEthernet(DestMAC, buffer, segment_lenght + IP_HEADER_SIZE, IPV4);
+}
+
+int sendUDP(uint8_t DestIP[], uint16_t DestPort, void * message, uint32_t message_length)
+{
+	uint8_t buffer[UDP_HEADER_SIZE + message_length];
+	UDPHeader * udp_header;
+	udp_header = (UDPHeader *)buffer;
+	/*Building the UDP header*/
+	udp_header->source_port = BE(UDP_DEFAULT_PORT);
+	udp_header->dest_port = BE(DestPort);
+	udp_header->length = BE(UDP_HEADER_SIZE + message_length);
+	/*Checksum is zero because its unused*/
+	udp_header->checksum = 0x0000;
+
+	/*Copy the message*/
+	memcpy(buffer + UDP_HEADER_SIZE, message, message_length);
+
+	/*Send to the IP layer*/
+	return sendIP(DestIP, buffer, UDP_HEADER_SIZE + message_length);
 }
 
 
