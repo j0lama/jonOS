@@ -520,7 +520,7 @@ int recv(uint16_t port, void * buffer, size_t buffer_length)
 			continue;
 
 		udp_header = (UDPHeader *) (frame + ETHERNET_HEADER_SIZE + IP_HEADER_SIZE);
-		if(validUDPHeader(port, udp_header) == FALSE) /*Invalid dest_port*/
+		if(port != ANY_PORT && validUDPHeader(port, udp_header) == FALSE) /*Invalid dest_port*/
 			continue;
 
 		/*Copy the UDP message*/

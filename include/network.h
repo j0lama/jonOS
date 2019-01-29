@@ -30,6 +30,8 @@
 #define IP_DATA_PROTOCOL UDP_PROTOCOL_ID
 #define IP_DATAGRAM_SIZE USPI_FRAME_BUFFER_SIZE - ETHERNET_HEADER_SIZE
 
+#define ANY_PORT 0
+
 
 typedef struct networkConfig
 {
