@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "stdlib.h"
 #include "uart.h"
 #include "interrupt.h"
 #include "timer.h"
@@ -7,6 +8,7 @@
 #include "gpu.h"
 #include "network.h"
 #include "uspios.h"
+#include "malloc.h"
 
 extern volatile uint32_t __binary_function;
 extern volatile uint32_t __heap_start;
@@ -23,7 +25,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 
-	uint8_t IPAddressPC[] = {192, 168, 1, 114};
+	uint8_t IPAddressPC[] = {192, 168, 1, 222};
 	uint8_t	MACAddressReplayed[MAC_ADDRESS_SIZE];
 	uint8_t MACDest[] = {0x74, 0x85, 0x2a, 0x1c, 0x68, 0xeb};
 	uint8_t MACBroadcast[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
@@ -45,7 +47,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	uart_puts("Hello from UART\r\n");
 	//timer(5);
-	set_foreground_color(WHITE);
+	set_foreground_color(GREEN);
 	console_puts(" Welcome to jonOS\n\n");
 	console_puts(" Screen base address: ");
 	console_puts(uint2hex(framebuffer.screenbase));
@@ -87,12 +89,48 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	//	printARPTable();
 	//	set_foreground_color(WHITE);
 	//}
-	char cadena[] = "Hola esto es un mensaje de prueba enviado desde jonOS";
+
+	/*Init dinamic memory*/
+	dinamic_mem_init();
+
+
+	uint8_t msg[32];
+	char answer[] = "Payload received";
+	void * payload = NULL;
+	int payloadLen = 0;
+
+	set_foreground_color(WHITE);
 	while(1)
 	{
-		MsDelay(3000);
-		sendIP(IPAddressPC, cadena, strlen(cadena));
-		console_puts("\n\n Message sent");
+		bzero(msg, 32);
+		recv(ANY_PORT, msg, 32);
+		console_puts("\n\n BRK Pointer address: ");
+		console_puts(uint2hex((uint32_t)getBRK()));
+
+		payloadLen = atoi((char *)msg);
+		console_puts("\n\n ");
+		console_puts(uint2dec((uint32_t)payloadLen));
+
+		/*Alloc memory for the payload*/
+		payload = alloc_m(payloadLen);
+		bzero(payload, payloadLen);
+
+		console_puts("\n\n BRK Pointer (after alloc_m): ");
+		console_puts(uint2hex((uint32_t)getBRK()));
+
+		recv(ANY_PORT, payload, payloadLen);
+
+		console_puts("\n\n ");
+		dumpPacket(payload, payloadLen);
+
+		/*Free the memory*/
+		free_m(payload);
+
+		console_puts("\n\n BRK Pointer (after free_m): ");
+		console_puts(uint2hex((uint32_t)getBRK()));
+
+		sendUDP(IPAddressPC, 12345, answer, strlen(answer));
+		console_puts("\n\n Answer sent");
 	}
 
 	/*

@@ -38,3 +38,21 @@ void bzero(void * dest, register size_t len)
 {
     memset(dest, 0, len);
 }
+
+int atoi(char * str)
+{
+	int i = 0;
+	int res = 0;
+	int negative = 1;
+	if(str[0] == '-')
+	{
+		negative = -1;
+		i = 1;
+	}
+	for(; str[i] != '\0'; i++)
+	{
+		res = 10*res + str[i] - '0';
+	}
+
+	return res*negative;
+}

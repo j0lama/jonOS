@@ -11,14 +11,14 @@
 #define BROADCAST_MAC {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF}
 #define MAC_ADDRESS_SIZE	6
 #define IP_ADDRESS_SIZE		4
-#define IPHEADER_SIZE	20
-#define UDPHEADER_SIZE	8
+#define IP_HEADER_SIZE	20
+#define UDP_HEADER_SIZE	8
 #define ETHERNET_HEADER_SIZE 14
-#define IP_HEADER_SIZE 20
 #define IP_IHL_VERSION 0x45
 #define IP_TOS 0x00 /*This can be changed to modify the priority*/
 #define IP_ID 1
 #define IP_TTL 0xEF
+#define UDP_DEFAULT_PORT 1337
 
 /*Other protocol identifiers*/
 /*https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers*/
@@ -30,12 +30,8 @@
 #define IP_DATA_PROTOCOL UDP_PROTOCOL_ID
 #define IP_DATAGRAM_SIZE USPI_FRAME_BUFFER_SIZE - ETHERNET_HEADER_SIZE
 
-/*Types of packets*/
-typedef enum PACKET_TYPE
-{
-	UDP_PACKET,
-	UNKNOWN_PACKET
-} PACKET_TYPE;
+#define ANY_PORT 0
+
 
 typedef struct networkConfig
 {
@@ -53,6 +49,8 @@ int ARPRequest(uint8_t IPAddress[], uint8_t * DestMAC);
 
 /*TEST*/
 int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght);
+int sendUDP(uint8_t DestIP[], uint16_t DestPort, void * message, uint32_t message_length);
+int recv(uint16_t port, void * buffer, size_t buffer_length);
 
 /*Debugging functions*/
 void printIP(uint8_t IPAddress[]);

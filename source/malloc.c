@@ -1,6 +1,9 @@
 #include "stdint.h"
 #include "stddef.h"
 
+#include "gpu.h"
+#include "string.h"
+
 
 struct header_t
 {
@@ -20,7 +23,7 @@ uint8_t * brk = 0;
 
 void dinamic_mem_init()
 {
-	brk = (uint8_t*)__heap_start;
+	brk = (uint8_t*)&__heap_start;
 }
 
 /*Function that allows to decrease and increase the brk pointer*/
@@ -29,6 +32,11 @@ void * sbrk(size_t size)
 	if(size == 0)
 		return brk;
 	brk = (void *)(((unsigned int) brk) + size);
+	return brk;
+}
+
+uint8_t * getBRK()
+{
 	return brk;
 }
 
@@ -49,7 +57,7 @@ struct header_t * get_first_free_block(size_t size)
 
 /*Is not necessary to protect the alloc and free actions with a mutex because there will be only one process*/
 
-void * malloc(size_t size)
+void * alloc_m(size_t size)
 {
 	size_t total_size;
 	void * block;
@@ -92,7 +100,7 @@ void * malloc(size_t size)
 }
 
 
-void free(void * block)
+void free_m(void * block)
 {
 	struct header_t * header = NULL, * aux = NULL;
 
@@ -102,10 +110,22 @@ void free(void * block)
 		return;
 
 	/*Get the header of the block*/
-	header = (struct header_t *)block - 1;
+	header = ((struct header_t *)block) - 1;
 
 	/*Get brk pointer*/
 	brk_pointer = (void *)sbrk(0);
+
+	console_puts("\n\n Malloc (block): ");
+	console_puts(uint2hex((uint32_t)block));
+
+	console_puts("\n\n Malloc (header): ");
+	console_puts(uint2hex((uint32_t)header));
+	console_puts("\n\n Malloc (header size): ");
+	console_puts(uint2dec((uint32_t)sizeof(struct header_t)));
+	console_puts("\n\n Malloc (brk_pointer): ");
+	console_puts(uint2hex((uint32_t)brk_pointer));
+	console_puts("\n\n Malloc (movida): ");
+	console_puts(uint2hex((uint32_t)(void *) (((unsigned int) (block)) + header->size)));
 
 	/*Freeing latest block allocated*/
 	if(brk_pointer == (void *) (((unsigned int) (block)) + header->size) )

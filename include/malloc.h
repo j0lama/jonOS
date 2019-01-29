@@ -3,7 +3,8 @@
 #include "stddef.h"
 
 void dinamic_mem_init();
-void * malloc(size_t size);
-void free(void * block);
+uint8_t * getBRK();
+void * alloc_m(size_t size);
+void free_m(void * block);
 
 #endif
