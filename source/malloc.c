@@ -49,7 +49,7 @@ struct header_t * get_first_free_block(size_t size)
 
 /*Is not necessary to protect the alloc and free actions with a mutex because there will be only one process*/
 
-void * malloc(size_t size)
+void * alloc_m(size_t size)
 {
 	size_t total_size;
 	void * block;
@@ -92,7 +92,7 @@ void * malloc(size_t size)
 }
 
 
-void free(void * block)
+void free_m(void * block)
 {
 	struct header_t * header = NULL, * aux = NULL;
 

@@ -209,6 +209,25 @@ int networkInit(uint8_t IPAddress[], uint8_t GatewayAddress[], uint8_t SubnetMas
 	return 0;
 }
 
+/*Function that gets the IP header checksum*/
+void calcChecksum(uint16_t longitud, uint8_t *datos, uint8_t *checksum) {
+	uint16_t word16;
+	uint32_t sum=0;
+	uint32_t i;
+
+	for (i=0; i<longitud; i=i+2) /* Make 16 bit words out of every two adjacent 8 bit words in the packet and add them up*/
+	{
+	    word16 = (datos[i]<<8) + datos[i+1];
+	    sum += (uint32_t)word16;       
+	}
+	while (sum>>16) /* Take only 16 bits out of the 32 bit sum and add up the carries */
+	    sum = (sum & 0xFFFF)+(sum >> 16);
+	sum = ~sum; /* One's complement the result */  
+	checksum[0] = sum >> 8;
+	checksum[1] = sum & 0xFF;
+	return;
+}
+
 Boolean validARPRequest(uint8_t * frame)
 {
 	ARPFrame * arp_request;
@@ -239,23 +258,36 @@ Boolean validARPReplay(uint8_t * frame)
 	return TRUE;
 }
 
-/*Function that gets the IP header checksum*/
-void calcChecksum(uint16_t longitud, uint8_t *datos, uint8_t *checksum) {
-	uint16_t word16;
-	uint32_t sum=0;
-	uint32_t i;
+Boolean validUDPHeader(uint16_t port, UDPHeader * header)
+{
+	/*This function only checks the dest_port assuming that checksum its unused*/
+	if(header->dest_port != BE(port))
+		return FALSE;
+	return TRUE;
+}
 
-	for (i=0; i<longitud; i=i+2) /* Make 16 bit words out of every two adjacent 8 bit words in the packet and add them up*/
-	{
-	    word16 = (datos[i]<<8) + datos[i+1];
-	    sum += (uint32_t)word16;       
-	}
-	while (sum>>16) /* Take only 16 bits out of the 32 bit sum and add up the carries */
-	    sum = (sum & 0xFFFF)+(sum >> 16);
-	sum = ~sum; /* One's complement the result */  
-	checksum[0] = sum >> 8;
-	checksum[1] = sum & 0xFF;
-	return;
+
+Boolean validIPHeader(IPHeader * ip_header)
+{
+	IPHeader header_aux; /*Used to check the IP Header checksum*/
+	memcpy(&header_aux, ip_header, IP_HEADER_SIZE);
+	header_aux.checksum = 0x0000;
+	calcChecksum(IP_HEADER_SIZE, (uint8_t *) &header_aux, (uint8_t *) &header_aux.checksum);
+
+	/*This function onlu checks the unvariable fields of the IP header*/
+	if(	ip_header->version_ihl != IP_IHL_VERSION /*Check the */
+		|| ip_header->checksum != header_aux.checksum /*Checksum*/
+		|| memcmp(ip_header->ip_dst, netConfiguration.IPAddress, IP_ADDRESS_SIZE) != 0) /*IP Dest*/
+		return FALSE;
+	return TRUE;
+}
+
+Boolean validEthernetHeader(EthernetHeader * eth_header)
+{
+	if(	memcmp(eth_header->MACReceiver, netConfiguration.MACAddress, MAC_ADDRESS_SIZE) /*Check if dest_mac is the Raspberry Pi MAC*/
+		|| eth_header->ProtocolType != BE(IPV4)) /*Check if level 3 protocol is IP protocol*/
+		return FALSE;
+	return TRUE;
 }
 
 
@@ -462,30 +494,40 @@ int sendUDP(uint8_t DestIP[], uint16_t DestPort, void * message, uint32_t messag
 }
 
 
-
-
-//void sendMessage(uint8_t DestMAC[], void * msg)
-//{
-//	uint8_t buffer[USPI_FRAME_BUFFER_SIZE];
-//	int len = strlen ((const char *) msg);
-//	memcpy((buffer+sizeof(EthernetHeader)), msg, len);
-//	sendEthernet(DestMAC, buffer, len+sizeof(EthernetHeader));
-//}
-
-PACKET_TYPE readPacket(void * buffer, size_t * buffer_length)
+int recv(uint16_t port, void * buffer, size_t buffer_length)
 {
-	uint8_t frame[USPI_FRAME_BUFFER_SIZE];
+	/*Alloc static memory for the buffer and the headers (UDP/IP/ETHERNET)*/
+	uint8_t frame[buffer_length + UDP_HEADER_SIZE + IP_HEADER_SIZE + ETHERNET_HEADER_SIZE];
+	UDPHeader * udp_header;
+	IPHeader * ip_header;
+	EthernetHeader * eth_header;
+	size_t frameSize = buffer_length + UDP_HEADER_SIZE + IP_HEADER_SIZE + ETHERNET_HEADER_SIZE;
+
 	while(1)
 	{
-		if(!recvFrame(frame, buffer_length)) /*While no frame is available continue waiting for one*/
+		if(!recvFrame(frame, &frameSize)) /*While no frame is available continue waiting for one*/
 			continue;
 
 		if(ARPReplay(frame) == 0) /*If the frame is a ARP Request still waiting for a new one*/
 			continue;
 
+		eth_header = (EthernetHeader *) (frame);
+		if(validEthernetHeader(eth_header) == FALSE) /*Invalid Ethernet header*/
+			continue;
+
+		ip_header = (IPHeader *) (frame + ETHERNET_HEADER_SIZE);
+		if(validIPHeader(ip_header) == FALSE) /*Invalid IP header*/
+			continue;
+
+		udp_header = (UDPHeader *) (frame + ETHERNET_HEADER_SIZE + IP_HEADER_SIZE);
+		if(validUDPHeader(port, udp_header) == FALSE) /*Invalid dest_port*/
+			continue;
+
+		/*Copy the UDP message*/
+		memcpy(buffer, frame + UDP_HEADER_SIZE + IP_HEADER_SIZE + ETHERNET_HEADER_SIZE, buffer_length);
+
 		break; /*No ARP Frame received*/
 	}
 
-	/*Identify the packet*/
-	return UNKNOWN_PACKET;
+	return 0;
 }

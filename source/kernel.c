@@ -1,4 +1,5 @@
 #include "stdint.h"
+#include "stdlib.h"
 #include "uart.h"
 #include "interrupt.h"
 #include "timer.h"
@@ -87,11 +88,18 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	//	printARPTable();
 	//	set_foreground_color(WHITE);
 	//}
+	uint8_t answer[32];
 	char str[] = "jonOS UDP Test";
-	MsDelay(3000);
-	sendUDP(IPAddressPC, 12345, str, strlen(str));
-	console_puts("\n\n Message sent");
-	while(1);
+	while(1)
+	{
+		bzero(answer, 32);
+		recv(1024, answer, 32);
+		console_puts("\n\n ");
+		console_puts((char*)answer);
+
+		sendUDP(IPAddressPC, 12345, str, strlen(str));
+		console_puts("\n\n Message sent");
+	}
 
 	/*
 	uint8_t code [] = "\x70\x40\x2D\xE9\x0C\x50\x9F\xE5\x0C\x40\x9F\xE5\x05\x00\xA0\xE1\x34\xFF\x2F\xE1\xFC\xFF\xFF\xEA\xB8\x7F\x00\x00\x48\x82\x00\x00";

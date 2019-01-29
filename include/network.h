@@ -30,12 +30,6 @@
 #define IP_DATA_PROTOCOL UDP_PROTOCOL_ID
 #define IP_DATAGRAM_SIZE USPI_FRAME_BUFFER_SIZE - ETHERNET_HEADER_SIZE
 
-/*Types of packets*/
-typedef enum PACKET_TYPE
-{
-	UDP_PACKET,
-	UNKNOWN_PACKET
-} PACKET_TYPE;
 
 typedef struct networkConfig
 {
@@ -54,6 +48,7 @@ int ARPRequest(uint8_t IPAddress[], uint8_t * DestMAC);
 /*TEST*/
 int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght);
 int sendUDP(uint8_t DestIP[], uint16_t DestPort, void * message, uint32_t message_length);
+int recv(uint16_t port, void * buffer, size_t buffer_length);
 
 /*Debugging functions*/
 void printIP(uint8_t IPAddress[]);
