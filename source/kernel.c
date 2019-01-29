@@ -38,7 +38,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	int ret = networkInit(IPAddress, Gateway, SubnetMask);
 
-	gpu_init(CHAR_SIZE_MEDIUM);
+	gpu_init(CHAR_SIZE_SMALL);
 
 	if(ret != 0)
 		console_puts(" Error in network\n\n");
