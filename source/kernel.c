@@ -113,7 +113,6 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 		/*Alloc memory for the payload*/
 		payload = alloc_m(payloadLen);
-		bzero(payload, payloadLen);
 
 		console_puts("\n\n BRK Pointer (after alloc_m): ");
 		console_puts(uint2hex((uint32_t)getBRK()));
@@ -121,7 +120,9 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 		recv(ANY_PORT, payload, payloadLen);
 
 		console_puts("\n\n ");
-		dumpPacket(payload, payloadLen);
+		dumpPacket((uint8_t *) &__heap_start, 20);
+		console_puts("\n\n ");
+		dumpPacket((uint8_t *) payload, 20);
 
 		/*Free the memory*/
 		free_m(payload);

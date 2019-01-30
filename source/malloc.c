@@ -1,8 +1,6 @@
 #include "stdint.h"
 #include "stddef.h"
-
-#include "gpu.h"
-#include "string.h"
+#include "stdlib.h"
 
 
 struct header_t
@@ -12,7 +10,7 @@ struct header_t
 	struct header_t * next;
 };
 
-struct header_t *first = NULL, *last = NULL;
+struct header_t *first, *last;
 
 
 extern volatile uint8_t *__heap_start;	/*Heap start address*/
@@ -24,6 +22,8 @@ uint8_t * brk = 0;
 void dinamic_mem_init()
 {
 	brk = (uint8_t*)&__heap_start;
+	first = NULL;
+	last = NULL;
 }
 
 /*Function that allows to decrease and increase the brk pointer*/
@@ -31,7 +31,7 @@ void * sbrk(size_t size)
 {
 	if(size == 0)
 		return brk;
-	brk = (void *)(((unsigned int) brk) + size);
+	brk = (void *)(((uint32_t) brk) + size);
 	return brk;
 }
 
@@ -86,7 +86,7 @@ void * alloc_m(size_t size)
 		return NULL;
 	}
 	
-	header = block;
+	header = (void *)((uint32_t)block - total_size);
 	/*Setting header values*/
 	header->free = 0;
 	header->size = size;
@@ -97,6 +97,16 @@ void * alloc_m(size_t size)
 	last = header;
 
 	return (void *) (header + 1);
+}
+
+void * calloc_m(size_t count, size_t size)
+{
+	void * block;
+	block = alloc_m(count * size);
+	if(block == NULL)
+		return NULL;
+	bzero(block, count * size);
+	return block;
 }
 
 
@@ -114,18 +124,6 @@ void free_m(void * block)
 
 	/*Get brk pointer*/
 	brk_pointer = (void *)sbrk(0);
-
-	console_puts("\n\n Malloc (block): ");
-	console_puts(uint2hex((uint32_t)block));
-
-	console_puts("\n\n Malloc (header): ");
-	console_puts(uint2hex((uint32_t)header));
-	console_puts("\n\n Malloc (header size): ");
-	console_puts(uint2dec((uint32_t)sizeof(struct header_t)));
-	console_puts("\n\n Malloc (brk_pointer): ");
-	console_puts(uint2hex((uint32_t)brk_pointer));
-	console_puts("\n\n Malloc (movida): ");
-	console_puts(uint2hex((uint32_t)(void *) (((unsigned int) (block)) + header->size)));
 
 	/*Freeing latest block allocated*/
 	if(brk_pointer == (void *) (((unsigned int) (block)) + header->size) )
