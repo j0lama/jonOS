@@ -501,7 +501,7 @@ int recv(uint16_t port, void * buffer, size_t buffer_length)
 	UDPHeader * udp_header;
 	IPHeader * ip_header;
 	EthernetHeader * eth_header;
-	size_t frameSize = buffer_length + UDP_HEADER_SIZE + IP_HEADER_SIZE + ETHERNET_HEADER_SIZE;
+	size_t frameSize;
 
 	while(1)
 	{
@@ -522,6 +522,8 @@ int recv(uint16_t port, void * buffer, size_t buffer_length)
 		udp_header = (UDPHeader *) (frame + ETHERNET_HEADER_SIZE + IP_HEADER_SIZE);
 		if(port != ANY_PORT && validUDPHeader(port, udp_header) == FALSE) /*Invalid dest_port*/
 			continue;
+
+		dumpPacket(frame, frameSize);
 
 		/*Copy the UDP message*/
 		memcpy(buffer, frame + UDP_HEADER_SIZE + IP_HEADER_SIZE + ETHERNET_HEADER_SIZE, buffer_length);
