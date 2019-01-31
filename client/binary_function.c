@@ -5,6 +5,5 @@
 void binary_function()
 {
 	console_puts("\n\n Prueba de payload");
-	console_puts("\n\n Jon");
 	return;
 }
