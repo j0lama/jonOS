@@ -4,8 +4,7 @@
 
 void binary_function()
 {
-	while (1)
-	{
-		uart_puts("Jon\r\n");
-	}
+	console_puts("\n\n Prueba de payload");
+	console_puts("\n\n Jon");
+	return;
 }

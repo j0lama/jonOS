@@ -111,13 +111,13 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 		recv(ANY_PORT, payload, payloadLen);
 
 		console_puts("\n\n ");
-		console_puts(payload);
+		dumpPacket(payload, payloadLen);
 
 		/*Free the memory*/
 		free_m(payload);
 
-		sendUDP(IPAddressPC, 12345, answer, strlen(answer));
-		console_puts("\n\n Answer sent");
+		//sendUDP(IPAddressPC, 12345, answer, strlen(answer));
+		//console_puts("\n\n Answer sent");
 	}
 
 	/*

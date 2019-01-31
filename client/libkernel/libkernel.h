@@ -19,6 +19,13 @@
 #define malloc ((void*(*))(size_t)0x83a4)
 #define free ((void(*))(void *)0x8498)
 
+/* NETWORK */
+#define sendUDP ((int(*))((uint8_t*)(uint16_t)(void*)(uint32_t))0xb178)
+
+/* SCREEN */
+#define console_puts ((void(*)(char*))0x8bd4)
+
+
 
 /*	VARIABLES
 	Auxiliary variables for tests
