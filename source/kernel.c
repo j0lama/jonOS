@@ -15,10 +15,6 @@ extern volatile uint32_t __heap_start;
 
 
 
-//arping 192.168.1.123 -I eno1 -c 6
-
-
-
 void main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	uint8_t IPAddress[] = {192, 168, 1, 123};
@@ -104,31 +100,21 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	{
 		bzero(msg, 32);
 		recv(ANY_PORT, msg, 32);
-		console_puts("\n\n BRK Pointer address: ");
-		console_puts(uint2hex((uint32_t)getBRK()));
 
 		payloadLen = atoi((char *)msg);
 		console_puts("\n\n ");
 		console_puts(uint2dec((uint32_t)payloadLen));
 
 		/*Alloc memory for the payload*/
-		payload = alloc_m(payloadLen);
-
-		console_puts("\n\n BRK Pointer (after alloc_m): ");
-		console_puts(uint2hex((uint32_t)getBRK()));
+		payload = calloc_m(1, payloadLen);
 
 		recv(ANY_PORT, payload, payloadLen);
 
 		console_puts("\n\n ");
-		dumpPacket((uint8_t *) &__heap_start, 20);
-		console_puts("\n\n ");
-		dumpPacket((uint8_t *) payload, 20);
+		console_puts(payload);
 
 		/*Free the memory*/
 		free_m(payload);
-
-		console_puts("\n\n BRK Pointer (after free_m): ");
-		console_puts(uint2hex((uint32_t)getBRK()));
 
 		sendUDP(IPAddressPC, 12345, answer, strlen(answer));
 		console_puts("\n\n Answer sent");

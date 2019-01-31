@@ -19,6 +19,7 @@
 #define IP_ID 1
 #define IP_TTL 0xEF
 #define UDP_DEFAULT_PORT 1337
+#define ARP_TABLE_LEN 16
 
 /*Other protocol identifiers*/
 /*https://en.wikipedia.org/wiki/List_of_IP_protocol_numbers*/
