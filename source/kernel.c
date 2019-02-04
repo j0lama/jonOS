@@ -89,10 +89,11 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	/*Init dinamic memory*/
 	dinamic_mem_init();
 
+	char hola_mundo[] = "Hello\r\n";
 
 	uint8_t msg[32];
 	char answer[] = "Payload received";
-	void * payload = NULL;
+	uint8_t * payload = NULL;
 	int payloadLen = 0;
 
 	set_foreground_color(WHITE);
@@ -114,12 +115,20 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 		dumpPacket(payload, payloadLen);
 
 		/* Execute the payload */
-		void (*f)() = (void(*)()) payload;
-		f();
-
+		uint8_t i = 0;
+		int (*f)() = (int(*)()) payload;
+		uint8_t * value = (uint8_t *) &__binary_function;
+		for(i = 0; i < payloadLen; i++)
+		{
+			*(volatile uint8_t*)(value + i) = payload[i];
+		}
 
 		/*Free the memory*/
 		free_m(payload);
+
+		f();
+
+		console_puts("\n\n Executed");
 
 		//sendUDP(IPAddressPC, 12345, answer, strlen(answer));
 		//console_puts("\n\n Answer sent");

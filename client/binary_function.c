@@ -2,8 +2,7 @@
 
 #include "libkernel.h"
 
-void binary_function()
+int binary_function()
 {
-	console_puts("\n\n Prueba de payload");
-	return;
+	return function("Hola");
 }

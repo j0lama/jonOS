@@ -27,6 +27,11 @@
 
 extern int idiv(uint32_t N, uint32_t D);
 
+int function(char * c)
+{
+	return 33;
+}
+
 /*	Message content
 
 	AAAABBBBxxxxxxxxCCCCyyyyyyyy
