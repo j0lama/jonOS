@@ -20,6 +20,6 @@ framebuffer_t framebuffer;
 
 void framebuffer_init(uint32_t char_size);
 
-int function(char * c);
+int function(int i);
 
 #endif

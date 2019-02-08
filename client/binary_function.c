@@ -4,5 +4,5 @@
 
 int binary_function()
 {
-	return function("Hola");
+	return 2;
 }

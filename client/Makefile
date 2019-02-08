@@ -9,7 +9,7 @@ ARM_TOOLCHAIN ?= arm-none-eabi
 LIBKERNEL = libkernel/
 
 # Flags for compilation
-FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -O2 -Wall -Wextra -pedantic -r
+FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -Wall -Wextra -pedantic -r
 
 all:
 	@echo "Building binary..."

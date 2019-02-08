@@ -27,9 +27,9 @@
 
 extern int idiv(uint32_t N, uint32_t D);
 
-int function(char * c)
+int function(int i)
 {
-	return 33;
+	return i;
 }
 
 /*	Message content

@@ -9,7 +9,7 @@
 /* SCREEN */
 #define console_puts ((void(*)(char*))0x8bd4)
 
-#define function ((void(*)(char*))0x8048)
+#define function ((int(*)(int))0x8048)
 
 
 #endif
