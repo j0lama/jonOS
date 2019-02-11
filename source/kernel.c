@@ -30,7 +30,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uint8_t msgPayloadLen[32];
 	uint8_t * payload = NULL;
 	int payloadLen = 0;
-	int var;
+	int var = 0;
 	int (*f)(void);
 
 	/* Init UART */

@@ -35,11 +35,6 @@ void * sbrk(size_t size)
 	return brk;
 }
 
-uint8_t * getBRK()
-{
-	return brk;
-}
-
 struct header_t * get_first_free_block(size_t size)
 {
 	struct header_t * aux = NULL;

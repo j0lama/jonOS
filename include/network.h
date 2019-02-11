@@ -45,11 +45,8 @@ typedef struct networkConfig
 networkConfig netConfiguration;
 
 int networkInit();
-int ARPRequest(uint8_t IPAddress[], uint8_t * DestMAC);
-//PACKET_TYPE recv(void * buffer, size_t * buffer_length);
 
 /*TEST*/
-int sendIP(uint8_t DestIP[], void * segment, uint32_t segment_lenght);
 int sendUDP(uint8_t DestIP[], uint16_t DestPort, void * message, uint32_t message_length);
 int recv(uint16_t port, void * buffer, size_t buffer_length);
 

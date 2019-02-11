@@ -27,11 +27,6 @@
 
 extern int idiv(uint32_t N, uint32_t D);
 
-int function(int i)
-{
-	return i;
-}
-
 /*	Message content
 
 	AAAABBBBxxxxxxxxCCCCyyyyyyyy
