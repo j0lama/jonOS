@@ -39,7 +39,7 @@ MAP_FILE = $(NAME).map
 LINKER_FILE = linker.ld
 
 # Flags for compilation
-FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O0 -Wall -Wextra -pedantic -mfloat-abi=hard
+FLAGS_C = -mcpu=arm1176jzf-s -fpic -ffreestanding -std=gnu99 -c -g -O0 -Wall -Wextra -pedantic -mfloat-abi=hard 
 FLAGS_S = -mcpu=arm1176jzf-s -fpic -ffreestanding -c -mfloat-abi=hard
 
 # Listing source files

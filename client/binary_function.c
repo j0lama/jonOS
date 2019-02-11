@@ -2,10 +2,12 @@
 
 #include "libkernel.h"
 
-void binary_function()
+int binary_function()
 {
-	while (1)
-	{
-		uart_puts("Jon\r\n");
-	}
+	return 2;
+}
+
+int f()
+{
+	return 2;
 }

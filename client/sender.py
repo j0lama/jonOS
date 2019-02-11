@@ -1,21 +1,10 @@
 #!/usr/bin/python
-import serial
-import sys
-import re
-import time
+import socket
 
-def main():
-	ser = serial.Serial("/dev/tty.SLAB_USBtoUART", 115200, timeout=1)
+IP = "192.168.1.114"
+PORT = 1234
 
-	with open('function.o', 'rb') as f:
-		text = f.read()
-		input()
-		ser.write(text) #Send the binary function
-
-	while True:
-		print(ser.read().decode())
-		input()
-		ser.write("b\r\n".encode())
-
-if __name__ == '__main__':
-	main()
+sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+payload = open('payload', 'rb').read()
+sock.sendto(str(len(payload)).encode(), (IP, PORT))
+sock.sendto(payload, (IP, PORT))

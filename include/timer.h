@@ -8,7 +8,5 @@ void timer(uint32_t seconds);
 void mtimer(uint32_t mseconds);
 void utimer(uint32_t useconds);
 void timer_set(uint32_t usecs);
-void MsDelay (unsigned nMilliSeconds);
-void usDelay (unsigned nMicroSeconds);
 
 #endif
