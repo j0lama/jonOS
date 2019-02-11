@@ -15,10 +15,6 @@ extern volatile uint32_t __heap_start;
 
 
 
-//arping 192.168.1.123 -I eno1 -c 6
-
-
-
 void main(uint32_t r0, uint32_t r1, uint32_t atags)
 {
 	uint8_t IPAddress[] = {192, 168, 1, 123};
