@@ -2,12 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <time.h>
+#include <sys/time.h>
 
 /* leftrotate function definition */
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
 
-#define NTIMES 1000000
 
 void dump(uint8_t * packet, uint32_t size)
 {
@@ -129,19 +128,18 @@ int main(int argc, char const *argv[])
     char *msg = "jon";
     size_t len = 3;
     int i, ntimes;
-    clock_t start, end;
+    struct timeval stop, start;
     double cpu_time_used;
 
     ntimes = atoi(argv[1]);
 
-    start = clock();
+    gettimeofday(&start, NULL);
     for(i = 0; i < ntimes; i++)
     {
         md5((uint8_t *)msg, len, value);
     }
-    end = clock();
-    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
-    printf("Time: %lf\n", cpu_time_used);
+    gettimeofday(&stop, NULL);
+    printf("Time: %lu\n", stop.tv_usec - start.tv_usec);
 
    	dump((uint8_t*)value, sizeof(uint32_t)*4);
 	return 0;
