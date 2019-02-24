@@ -1,2 +1,2 @@
 #!/bin/bash
-gcc -o raspbian raspbian.c
+gcc -o raspbian raspbian.c -O2

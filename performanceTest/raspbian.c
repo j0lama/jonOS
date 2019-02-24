@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
-#include <sys/time.h>
+#include <time.h>
 
 /* leftrotate function definition */
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
@@ -128,18 +128,19 @@ int main(int argc, char const *argv[])
     char *msg = "jon";
     size_t len = 3;
     int i, ntimes;
-    struct timeval stop, start;
+    clock_t start, end;
     double cpu_time_used;
 
     ntimes = atoi(argv[1]);
 
-    gettimeofday(&start, NULL);
+    start = clock();
     for(i = 0; i < ntimes; i++)
     {
         md5((uint8_t *)msg, len, value);
     }
-    gettimeofday(&stop, NULL);
-    printf("Time: %lu\n", stop.tv_usec - start.tv_usec);
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Time: %lf\n", cpu_time_used);
 
    	dump((uint8_t*)value, sizeof(uint32_t)*4);
 	return 0;
