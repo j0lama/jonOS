@@ -1,12 +1,26 @@
-/*Example of a function using the jonOS's libraries*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdint.h>
+#include <time.h>
 
-#include "libkernel.h"
-
+/* leftrotate function definition */
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
 
-void md5(uint8_t *initial_msg, size_t initial_len) {
+
+void dump(uint8_t * packet, uint32_t size)
+{
+	int i = 0;
+	while(size--)
+	{
+		printf("%02hhx", packet[i]);
+		i++;
+	}
+    printf("\n");
+}
+ 
+void md5(uint8_t *initial_msg, size_t initial_len, uint32_t * md5_value) {
     /* Note: All variables are unsigned 32 bit and wrap modulo 2^32 when calculating */
-    uint32_t n[4];
  
     /* r specifies the per-round shift amounts */
     uint32_t r[] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
@@ -33,10 +47,10 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
         0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
         0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
  
-    n[0] = 0x67452301;
-    n[1] = 0xefcdab89;
-    n[2] = 0x98badcfe;
-    n[3] = 0x10325476;
+    md5_value[0] = 0x67452301;
+    md5_value[1] = 0xefcdab89;
+    md5_value[2] = 0x98badcfe;
+    md5_value[3] = 0x10325476;
  
     /*  Pre-processing: adding a single 1 bit
     append "1" bit to message    
@@ -69,10 +83,10 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
         /* break chunk into sixteen 32-bit words w[j], 0 ≤ j ≤ 15 */
         uint32_t *w = (uint32_t *) (msg + offset);
         /* Initialize hash value for this chunk: */
-        uint32_t a = n[0];
-        uint32_t b = n[1];
-        uint32_t c = n[2];
-        uint32_t d = n[3];
+        uint32_t a = md5_value[0];
+        uint32_t b = md5_value[1];
+        uint32_t c = md5_value[2];
+        uint32_t d = md5_value[3];
         /* Main loop: */
         uint32_t i;
         for(i = 0; i<64; i++)
@@ -100,10 +114,34 @@ void md5(uint8_t *initial_msg, size_t initial_len) {
             b = b + LEFTROTATE((a + f + k[i] + w[g]), r[i]);
             a = temp;
         }
-        n[0] += a;
-        n[1] += b;
-        n[2] += c;
-        n[3] += d;
+
+        md5_value[0] += a;
+        md5_value[1] += b;
+        md5_value[2] += c;
+        md5_value[3] += d;
     }
-    return;
+}
+
+int main(int argc, char const *argv[])
+{
+	uint32_t value[4];
+    char *msg = "jon";
+    size_t len = 3;
+    int i, ntimes;
+    clock_t start, end;
+    double cpu_time_used;
+
+    ntimes = atoi(argv[1]);
+
+    start = clock();
+    for(i = 0; i < ntimes; i++)
+    {
+        md5((uint8_t *)msg, len, value);
+    }
+    end = clock();
+    cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
+    printf("Time: %lf\n", cpu_time_used);
+
+   	dump((uint8_t*)value, sizeof(uint32_t)*4);
+	return 0;
 }

@@ -23,13 +23,16 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	/* Network configuration */
 	uint8_t IPAddress[] = {192, 168, 1, 123};
+	uint8_t IPAddressDest[] = {192, 168, 1, 222};
 	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 	uint8_t msgPayloadLen[32];
+	uint8_t buffer[32];
 	uint8_t * payload = NULL;
+	int ntimes = 0; /* Number of executions */
 	int payloadLen = 0;
-	int var = 0;
-	int (*f)(void);
+	void (*f)(uint8_t*,size_t);
+	char *msg = "jon";
 
 	/* Init UART */
 	uart_init();
@@ -46,7 +49,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	int ret = networkInit(IPAddress, Gateway, SubnetMask);
 
 	/* Init GPU and screen */
-	gpu_init(CHAR_SIZE_SMALL);
+	gpu_init(CHAR_SIZE_MEDIUM);
 
 	if(ret != 0)
 		console_puts(" Error in network\n\n");
@@ -59,30 +62,37 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	/* Printing system information */
 	console_puts(" Welcome to jonOS\n\n");
-	console_puts(" Screen base address: ");
-	console_puts(uint2hex(framebuffer.screenbase));
-	console_puts("\n\n Screen dimensions: ");
-	console_puts(uint2dec(framebuffer.x));
-	console_puts("x");
-	console_puts(uint2dec(framebuffer.y));
-	console_puts("\n\n Heap base address: ");
-	console_puts(uint2hex((uint32_t)&__heap_start));
-	console_puts("\n\n Payload base address: ");
-	console_puts(uint2hex((uint32_t)&__binary_function));
-
-	/* Printing network configuration */
-	console_puts("\n\n\n Network configuration");
-	console_puts("\n\n IP address: ");
-	printIP(netConfiguration.IPAddress);
-	console_puts("\n\n Gateway address: ");
-	printIP(netConfiguration.GatewayAddress);
-	console_puts("\n\n Subnet Mask: ");
-	printIP(netConfiguration.SubnetMask);
-	console_puts("\n\n MAC address: ");
-	printMAC(netConfiguration.MACAddress);
+	//console_puts(" Screen base address: ");
+	//console_puts(uint2hex(framebuffer.screenbase));
+	//console_puts("\n\n Screen dimensions: ");
+	//console_puts(uint2dec(framebuffer.x));
+	//console_puts("x");
+	//console_puts(uint2dec(framebuffer.y));
+	//console_puts("\n\n Heap base address: ");
+	//console_puts(uint2hex((uint32_t)&__heap_start));
+	//console_puts("\n\n Payload base address: ");
+	//console_puts(uint2hex((uint32_t)&__binary_function));
+	///* Printing network configuration */
+	//console_puts("\n\n\n Network configuration");
+	//console_puts("\n\n IP address: ");
+	//printIP(netConfiguration.IPAddress);
+	//console_puts("\n\n Gateway address: ");
+	//printIP(netConfiguration.GatewayAddress);
+	//console_puts("\n\n Subnet Mask: ");
+	//printIP(netConfiguration.SubnetMask);
+	//console_puts("\n\n MAC address: ");
+	//printMAC(netConfiguration.MACAddress);
 
 	/* Setting up the screen colors */
 	set_foreground_color(WHITE);
+
+	/* Loop for the Network performance test based on a echo server */
+	while(1)
+	{
+		recv(ANY_PORT, buffer, 32);
+		int sendUDP(IPAddressDest, uint16_t DestPort, void * message, uint32_t message_length);
+	}
+
 
 	/* Loop that waits for the payload */
 	while(1)
@@ -96,8 +106,20 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 		payloadLen = atoi((char *)msgPayloadLen);
 
 		/* Print the lenght */
-		console_puts("\n\n ");
-		console_puts(uint2dec((uint32_t)payloadLen));
+		//console_puts("\n\n payloadLen: ");
+		//console_puts(uint2dec((uint32_t)payloadLen));
+
+		/* Receive ntimes value */
+		/* Clean the buffer */
+		bzero(msgPayloadLen, 32);
+		/* Receive the payload length*/
+		recv(ANY_PORT, msgPayloadLen, 32);
+		/* Converts to number the payload length */
+		ntimes = atoi((char *)msgPayloadLen);
+		/* Print the lenght */
+		//console_puts("\n\n Ntimes: ");
+		//console_puts(uint2dec((uint32_t)ntimes));
+
 
 		/*Alloc memory for the payload*/
 		payload = alloc_m(payloadLen);
@@ -109,24 +131,26 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 		recv(ANY_PORT, payload, payloadLen);
 
 		/* Converts the payload to a function*/
-		f = (int(*)(void)) payload;
-
-		/* Dumps the function */
-		console_puts("\n\n ");
-		dumpPacket(payload, payloadLen);
+		f = (void(*)(uint8_t*,size_t)) payload;
 
 		/* Print the fucntion address */
 		console_puts("\n\n Function address: ");
 		console_puts(uint2hex((uint32_t)f));
 
+		/* Send the start flag*/
+		uart_puts("S");
+
 		/* Execute the function */
-		var = f();
+		while(ntimes--)
+			f((uint8_t *)msg, 3);
+
+		/* Send the end flag*/
+		uart_puts("E");
+
+		console_puts("\n\n Done");
 
 		/*Free the memory*/
 		free_m(payload);
-		
-		console_puts("\n\n Return value: ");
-		console_puts(uint2dec(var));
 		//sendUDP(IPAddressPC, 12345, answer, strlen(answer));
 		//console_puts("\n\n Answer sent");
 	}

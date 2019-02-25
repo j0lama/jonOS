@@ -42,11 +42,6 @@ void gpu_init(uint8_t char_size)
 	uart_puts("OK: GPU (VideoCore) initialized correctly.\r\n");
 }
 
-/* Current console text cursor position (ie. where the next character will
- * be written
-*/
-
-
 void move_cursor()
 {
 	register uint32_t rowsize = framebuffer.pitch * CHARSIZE_Y*console.char_size; /* (BytesPerLine)*lineHeight*characterSize */

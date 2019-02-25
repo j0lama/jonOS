@@ -1,27 +1,58 @@
 /*Based on GCC Glibc implementation implementation*/
 
 #include "stddef.h"
+#include "stdint.h"
 
 void memset(void * dest, register int c, register size_t len)
 {
-	register unsigned char *ptr = (unsigned char*)dest;
+	register uint8_t *ptr = (uint8_t*)dest;
   	while (len-- > 0)
     	*ptr++ = c;
 }
 
-void memcpy(void * dest, const void * src, register size_t len)
+/* Auxiliary functions to speed-up the memcpy function if size is 4*N or 2*N */
+
+void __memcpy_mod4__(void * dest, const void * src, register size_t len)
 {
-    register unsigned char *d = (unsigned char*)dest;
-    register unsigned char *s = (unsigned char*)src;
+	register uint32_t *d = (uint32_t*)dest;
+    register uint32_t *s = (uint32_t*)src;
     while (len-- > 0) {
         *d++ = *s++;
     }
 }
 
+void __memcpy_mod2__(void * dest, const void * src, register size_t len)
+{
+	register uint16_t *d = (uint16_t*)dest;
+    register uint16_t *s = (uint16_t*)src;
+    while (len-- > 0) {
+        *d++ = *s++;
+    }
+}
+
+void __memcpy_modN__(void * dest, const void * src, register size_t len)
+{
+	register uint8_t *d = (uint8_t*)dest;
+    register uint8_t *s = (uint8_t*)src;
+    while (len-- > 0) {
+        *d++ = *s++;
+    }
+}
+
+void memcpy(void * dest, const void * src, register size_t len)
+{
+	if(len % 4 == 0)
+		__memcpy_mod4__(dest, src, len/4);
+	else if(len % 2 == 0)
+		__memcpy_mod2__(dest, src, len/2);
+	else
+		__memcpy_modN__(dest, src, len);
+}
+
 int memcmp(const void * buffer1, const void * buffer2, size_t nLength)
 {
-	const unsigned char *p1 = (const unsigned char *) buffer1;
-	const unsigned char *p2 = (const unsigned char *) buffer2;
+	const uint8_t *p1 = (const uint8_t *) buffer1;
+	const uint8_t *p2 = (const uint8_t *) buffer2;
 	
 	while (nLength--)
 	{
