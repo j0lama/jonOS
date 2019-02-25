@@ -64,10 +64,10 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	console_puts(" Welcome to jonOS\n\n");
 	//console_puts(" Screen base address: ");
 	//console_puts(uint2hex(framebuffer.screenbase));
-	//console_puts("\n\n Screen dimensions: ");
-	//console_puts(uint2dec(framebuffer.x));
-	//console_puts("x");
-	//console_puts(uint2dec(framebuffer.y));
+	console_puts("\n\n Screen dimensions: ");
+	console_puts(uint2dec(framebuffer.x));
+	console_puts("x");
+	console_puts(uint2dec(framebuffer.y));
 	//console_puts("\n\n Heap base address: ");
 	//console_puts(uint2hex((uint32_t)&__heap_start));
 	//console_puts("\n\n Payload base address: ");
@@ -90,7 +90,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	while(1)
 	{
 		recv(ANY_PORT, buffer, 32);
-		int sendUDP(IPAddressDest, uint16_t DestPort, void * message, uint32_t message_length);
+		sendUDP(IPAddressDest, 8888, buffer, strlen((char *)buffer));
 	}
 
 

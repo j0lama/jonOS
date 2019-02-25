@@ -6,8 +6,8 @@ IPserver = '0.0.0.0'
 PORTserver = 8888
 
 #Client
-IP = '0.0.0.0'
-PORT = 8800
+IP = '192.168.1.222'
+PORT = 1234
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.bind((IPserver, PORTserver))
