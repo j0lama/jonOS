@@ -3,7 +3,7 @@ import socket, sys
 
 #Server
 IPserver = '0.0.0.0'
-PORTserver = 8800
+PORTserver = 1234
 
 #Client
 IP = '0.0.0.0'

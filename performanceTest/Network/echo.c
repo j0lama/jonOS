@@ -31,7 +31,6 @@ int main(int argc, char *argv[]) {
 	// socket address used to store client address
 	
 	int client_address_len = 0;
-
 	while (true) {
 		len = recvfrom(sock, buffer, 32, 0,(struct sockaddr *)&client_address, &client_address_len);
 		buffer[len] = '\0';
