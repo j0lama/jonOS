@@ -44,6 +44,6 @@ SECTIONS
     __heap_start = .;
     . = . + 0x1000000;  /*4MB Heap section*/
     __heap_end = .;
-    __binary_function = .;
+    __address_solver = .;
     __end = .;
 }

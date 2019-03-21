@@ -1,5 +1,6 @@
 #include "stdint.h"
 #include "stddef.h"
+#include <stdlib.h>
 
 char *uint2hex(uint32_t value)
 {
@@ -61,4 +62,9 @@ size_t strlen (const char *string)
 	while (*string++)
 		nResult++;
 	return nResult;
+}
+
+void strcpy(char * dest, const char * src)
+{
+	memcpy(dest, src, strlen(src)+1);
 }

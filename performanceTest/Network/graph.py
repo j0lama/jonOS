@@ -28,13 +28,13 @@ for line in jonOS_peer2peer:
 jonOS_peer2peerY = [x / 10 for x in jonOS_peer2peerY]
 
 plt.title('Network time comparation using Echo Server')
-plt.plot(xAxis, raspbianY, '-bo', label='Raspbian (Linux) with Router')
+#plt.plot(xAxis, raspbianY, '-bo', label='Raspbian (Linux) with Router')
 plt.plot(xAxis, jonOSY, '-r*', label='jonOS with Router')
-plt.plot(xAxis, raspbian_peer2peerY, '-g^', label='Raspbian (Linux) with P2P')
+#plt.plot(xAxis, raspbian_peer2peerY, '-g^', label='Raspbian (Linux) with P2P')
 plt.plot(xAxis, jonOS_peer2peerY, '-ys', label='jonOS with P2P')
 plt.xlabel('Number of Requests')
 plt.ylabel('Time (seconds)')
-plt.xscale('log')
+#plt.xscale('log')
 plt.legend()
 plt.show()
 #plt.savefig('graph.png')

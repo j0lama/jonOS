@@ -49,7 +49,6 @@ void uart_init()
  
 	// Enable UART0, receive & transfer part of UART.
 	io_write(UART0_CR, (1 << 0) | (1 << 8) | (1 << 9));
-	uart_puts("OK: UART initialized correctly.\r\n");
 }
 
 void uart_putc(uint8_t c)
