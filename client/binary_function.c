@@ -2,9 +2,9 @@
 
 int echoServer()
 {
-	void(*bzero)(void *, register size_t) = solveFunctionInt(19);
-	int*(*recv)(uint16_t, void *, size_t) = solveFunctionInt(11);
-	void(*console_puts)(uint8_t *) = solveFunctionInt(1);
+	void(*bzero)(void *, register size_t) = solveFunction(BZERO);
+	int*(*recv)(uint16_t, void *, size_t) = solveFunction(RECV);
+	void(*console_puts)(uint8_t *) = solveFunction(CONSOLE_PUTS);
 	uint8_t buffer[32];
 
 	while(1)
