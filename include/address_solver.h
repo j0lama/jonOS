@@ -3,5 +3,6 @@
 
 void init_address_solver();
 void * solveFunction(const char * name);
+void * solveFunctionInt(int pos);
 
 #endif

@@ -1,6 +1,6 @@
 #include "libkernel.h"
 
-void echoServer()
+int echoServer()
 {
 	uint8_t buffer[32];
 	uint8_t IPAddressDest[] = {192, 168, 1, 222};
