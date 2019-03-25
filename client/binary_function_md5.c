@@ -1,29 +1,12 @@
-/*
- * Simple MD5 implementation
- * Original algorithm by: Tim Caswell
- * Modification for jonOS by: j0lama
- * Note: This algorithm will be used for a performance benchmark
- */
+/*Example of a function using the jonOS's libraries*/
 
-#include <stdio.h>
-#include <string.h>
-#include <stdint.h>
+#include "libkernel.h"
 
-/* gcc -o md5 -O3 -lm md5.c */
- 
-/* leftrotate function definition */
 #define LEFTROTATE(x, c) (((x) << (c)) | ((x) >> (32 - (c))))
 
-typedef struct
-{
-    uint32_t h0;
-    uint32_t h1;
-    uint32_t h2;
-    uint32_t h3;
-} md5_t;
- 
-void md5(uint8_t *initial_msg, size_t initial_len, md5_t * md5_value) {
+void md5(uint8_t *initial_msg, size_t initial_len) {
     /* Note: All variables are unsigned 32 bit and wrap modulo 2^32 when calculating */
+    uint32_t n[4];
  
     /* r specifies the per-round shift amounts */
     uint32_t r[] = {7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22, 7, 12, 17, 22,
@@ -50,10 +33,10 @@ void md5(uint8_t *initial_msg, size_t initial_len, md5_t * md5_value) {
         0x6fa87e4f, 0xfe2ce6e0, 0xa3014314, 0x4e0811a1,
         0xf7537e82, 0xbd3af235, 0x2ad7d2bb, 0xeb86d391};
  
-    md5_value->h0 = 0x67452301;
-    md5_value->h1 = 0xefcdab89;
-    md5_value->h2 = 0x98badcfe;
-    md5_value->h3 = 0x10325476;
+    n[0] = 0x67452301;
+    n[1] = 0xefcdab89;
+    n[2] = 0x98badcfe;
+    n[3] = 0x10325476;
  
     /*  Pre-processing: adding a single 1 bit
     append "1" bit to message    
@@ -80,16 +63,16 @@ void md5(uint8_t *initial_msg, size_t initial_len, md5_t * md5_value) {
     // Process the message in successive 512-bit chunks:
     //for each 512-bit chunk of message:
     int offset;
-    for(offset=0; offset<new_len; offset += (512/8))
+    for(offset=0; offset<new_len; offset += 64)
     {
  
         /* break chunk into sixteen 32-bit words w[j], 0 ≤ j ≤ 15 */
         uint32_t *w = (uint32_t *) (msg + offset);
         /* Initialize hash value for this chunk: */
-        uint32_t a = md5_value->h0;
-        uint32_t b = md5_value->h1;
-        uint32_t c = md5_value->h2;
-        uint32_t d = md5_value->h3;
+        uint32_t a = n[0];
+        uint32_t b = n[1];
+        uint32_t c = n[2];
+        uint32_t d = n[3];
         /* Main loop: */
         uint32_t i;
         for(i = 0; i<64; i++)
@@ -117,38 +100,10 @@ void md5(uint8_t *initial_msg, size_t initial_len, md5_t * md5_value) {
             b = b + LEFTROTATE((a + f + k[i] + w[g]), r[i]);
             a = temp;
         }
-
-        md5_value->h0 += a;
-        md5_value->h1 += b;
-        md5_value->h2 += c;
-        md5_value->h3 += d;
+        n[0] += a;
+        n[1] += b;
+        n[2] += c;
+        n[3] += d;
     }
-}
- 
-int main(int argc, char **argv) {
- 
-    if (argc < 2) {
-        printf("usage: %s 'string'\n", argv[0]);
-        return 1;
-    }
-    
-    md5_t md5_value;
-    uint8_t *p;
-    char *msg = argv[1];
-    size_t len = strlen(argv[1]);
-
-    md5((uint8_t *)msg, len, &md5_value);
- 
-    // display result
-    p=(uint8_t *)&md5_value.h0;
-    printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], md5_value.h0);
-    p=(uint8_t *)&md5_value.h1;
-    printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], md5_value.h1);
-    p=(uint8_t *)&md5_value.h2;
-    printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], md5_value.h2);
-    p=(uint8_t *)&md5_value.h3;
-    printf("%2.2x%2.2x%2.2x%2.2x", p[0], p[1], p[2], p[3], md5_value.h3);
-    puts("");
- 
-    return 0;
+    return;
 }

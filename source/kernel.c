@@ -23,7 +23,6 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 	/* Network configuration */
 	uint8_t IPAddress[] = {192, 168, 1, 123};
-	uint8_t IPAddressDest[] = {192, 168, 1, 222};
 	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 	uint8_t msgPayloadLen[32];
@@ -86,14 +85,6 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	/* Setting up the screen colors */
 	set_foreground_color(WHITE);
 
-	/* Loop for the Network performance test based on a echo server */
-	while(1)
-	{
-		recv(ANY_PORT, buffer, 32);
-		sendUDP(IPAddressDest, 8888, buffer, strlen((char *)buffer));
-	}
-
-
 	/* Loop that waits for the payload */
 	while(1)
 	{
@@ -104,22 +95,6 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 		/* Converts to number the payload length */
 		payloadLen = atoi((char *)msgPayloadLen);
-
-		/* Print the lenght */
-		//console_puts("\n\n payloadLen: ");
-		//console_puts(uint2dec((uint32_t)payloadLen));
-
-		/* Receive ntimes value */
-		/* Clean the buffer */
-		bzero(msgPayloadLen, 32);
-		/* Receive the payload length*/
-		recv(ANY_PORT, msgPayloadLen, 32);
-		/* Converts to number the payload length */
-		ntimes = atoi((char *)msgPayloadLen);
-		/* Print the lenght */
-		//console_puts("\n\n Ntimes: ");
-		//console_puts(uint2dec((uint32_t)ntimes));
-
 
 		/*Alloc memory for the payload*/
 		payload = alloc_m(payloadLen);
@@ -137,22 +112,11 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 		console_puts("\n\n Function address: ");
 		console_puts(uint2hex((uint32_t)f));
 
-		/* Send the start flag*/
-		uart_puts("S");
-
-		/* Execute the function */
-		while(ntimes--)
-			f((uint8_t *)msg, 3);
-
-		/* Send the end flag*/
-		uart_puts("E");
-
-		console_puts("\n\n Done");
+		/* Execute the payload */
+		f();
 
 		/*Free the memory*/
 		free_m(payload);
-		//sendUDP(IPAddressPC, 12345, answer, strlen(answer));
-		//console_puts("\n\n Answer sent");
 	}
 
 }

@@ -56,7 +56,7 @@ char *uint2dec(uint32_t value)
 	return &buffer[offset];
 }
 
-size_t strlen (const char *string)
+size_t strlen(const char *string)
 {
 	size_t nResult = 0;
 	while (*string++)
@@ -67,4 +67,14 @@ size_t strlen (const char *string)
 void strcpy(char * dest, const char * src)
 {
 	memcpy(dest, src, strlen(src)+1);
+}
+
+int strcmp(const char * str1, const char * str2)
+{
+	uint8_t len1, len2;
+	len1 = strlen(str1);
+	len2 = strlen(str2);
+	if(len1 != len2)
+		return 1;
+	return memcmp(str1, str2, len1);
 }
