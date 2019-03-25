@@ -10,8 +10,9 @@
 #include "uspios.h"
 #include "malloc.h"
 #include "cache.h"
+#include "address_solver.h"
 
-extern volatile uint32_t __binary_function;
+extern volatile uint32_t __address_solver;
 extern volatile uint32_t __heap_start;
 
 void main(uint32_t r0, uint32_t r1, uint32_t atags)
@@ -26,12 +27,9 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 	uint8_t msgPayloadLen[32];
-	uint8_t buffer[32];
 	uint8_t * payload = NULL;
-	int ntimes = 0; /* Number of executions */
 	int payloadLen = 0;
-	void (*f)(uint8_t*,size_t);
-	char *msg = "jon";
+	int (*f)();
 
 	/* Init UART */
 	uart_init();
@@ -44,11 +42,14 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	/*Init dinamic memory*/
 	dinamic_mem_init();
 
+	/* Init address solver */
+	init_address_solver();
+
 	/* Init network stack */
 	int ret = networkInit(IPAddress, Gateway, SubnetMask);
 
 	/* Init GPU and screen */
-	gpu_init(CHAR_SIZE_MEDIUM);
+	gpu_init(CHAR_SIZE_SMALL);
 
 	if(ret != 0)
 		console_puts(" Error in network\n\n");
@@ -67,24 +68,24 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	console_puts(uint2dec(framebuffer.x));
 	console_puts("x");
 	console_puts(uint2dec(framebuffer.y));
-	//console_puts("\n\n Heap base address: ");
-	//console_puts(uint2hex((uint32_t)&__heap_start));
-	//console_puts("\n\n Payload base address: ");
-	//console_puts(uint2hex((uint32_t)&__binary_function));
-	///* Printing network configuration */
-	//console_puts("\n\n\n Network configuration");
-	//console_puts("\n\n IP address: ");
-	//printIP(netConfiguration.IPAddress);
-	//console_puts("\n\n Gateway address: ");
-	//printIP(netConfiguration.GatewayAddress);
-	//console_puts("\n\n Subnet Mask: ");
-	//printIP(netConfiguration.SubnetMask);
-	//console_puts("\n\n MAC address: ");
-	//printMAC(netConfiguration.MACAddress);
+	console_puts("\n\n Heap base address: ");
+	console_puts(uint2hex((uint32_t)&__heap_start));
+	console_puts("\n\n Payload base address: ");
+	console_puts(uint2hex((uint32_t)&__address_solver));
+	/* Printing network configuration */
+	console_puts("\n\n\n Network configuration");
+	console_puts("\n\n IP address: ");
+	printIP(netConfiguration.IPAddress);
+	console_puts("\n\n Gateway address: ");
+	printIP(netConfiguration.GatewayAddress);
+	console_puts("\n\n Subnet Mask: ");
+	printIP(netConfiguration.SubnetMask);
+	console_puts("\n\n MAC address: ");
+	printMAC(netConfiguration.MACAddress);
 
 	/* Setting up the screen colors */
 	set_foreground_color(WHITE);
-
+	int value = 0;
 	/* Loop that waits for the payload */
 	while(1)
 	{
@@ -109,11 +110,13 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 		f = (void(*)(uint8_t*,size_t)) payload;
 
 		/* Print the fucntion address */
-		console_puts("\n\n Function address: ");
+		console_puts("\n\n Payload received at ");
 		console_puts(uint2hex((uint32_t)f));
 
 		/* Execute the payload */
-		f();
+		value = f();
+		console_puts("\n\n Payload return: ");
+		console_puts(uint2dec(value));
 
 		/*Free the memory*/
 		free_m(payload);
