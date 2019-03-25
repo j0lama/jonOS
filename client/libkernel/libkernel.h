@@ -107,7 +107,7 @@ typedef struct networkConfig
 
 /* Function used to solve all function address */
 /* void * solveFunction(const char * name) */
-#define solveFunction ( (void*(*)(int)) 0x8670)
+#define solveFunction ( (void*(*)(int)) 0x8368)
 
 
 #endif
