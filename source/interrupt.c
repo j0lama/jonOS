@@ -3,7 +3,7 @@
 /*  NOTES:
     The idea of this module is to create some functions that allow us to initialize any interrupt 
 
-    __attribute__ ((interrupt ("ABORT"))) header makes that GCC compile the fucntion with
+    __attribute__ ((interrupt ("ABORT"))) header makes that GCC compile the function with
     a special epilogue and prologue
 
     The pending flag cannot be cleared using the interrupt peripheral, it must be cleared in the 
