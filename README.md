@@ -9,5 +9,23 @@ The performance results of this architecture compared with Rasbian (Debian based
 
 ![Real Time comparison](images/real_time.png)
 
-
 ![Network Time comparison](images/network.png)
+
+## Compile jonOS
+
+To compile jonOS use the make utility in the root folder:
+```
+make
+```
+
+## Prepare the SD Card
+
+In the SD Card boot partition introduce following files after compile the kernel:
+
+- boot/bootcode.bin
+- boot/cmdline.txt
+- kernel.img
+
+## Send functions
+
+The function has to be programed in the file *client/binary_function.c* and replace *IP* and *PORT* fields in the file *client/sender.py* with the IP and PORT that has been configured in jonOS.
