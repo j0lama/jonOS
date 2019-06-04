@@ -23,8 +23,8 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void) atags;
 
 	/* Network configuration */
-	uint8_t IPAddress[] = {192, 168, 1, 123};
-	uint8_t Gateway[] = {192, 168, 1, 1};
+	uint8_t IPAddress[] = {123, 123, 123, 123};
+	uint8_t Gateway[] = {123, 123, 123, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 	uint8_t msgPayloadLen[32];
 	uint8_t * payload = NULL;
