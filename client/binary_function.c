@@ -12,6 +12,8 @@ int echoServer()
 		bzero(buffer, 32);
 		recv(0, buffer, 32);
 		console_puts(buffer);
+		if(buffer[1] == 'e' && buffer[2] == 'n' && buffer[3] == 'd')
+			break;
 	}
 	return 0;
 }

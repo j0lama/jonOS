@@ -49,7 +49,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	int ret = networkInit(IPAddress, Gateway, SubnetMask);
 
 	/* Init GPU and screen */
-	gpu_init(CHAR_SIZE_SMALL);
+	gpu_init(CHAR_SIZE_BIG);
 
 	if(ret != 0)
 		console_puts(" Error in network\n\n");
@@ -110,8 +110,9 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 		f = (void(*)(uint8_t*,size_t)) payload;
 
 		/* Print the fucntion address */
-		console_puts("\n\n Payload received at ");
+		console_puts("\n\n Client Payload at ");
 		console_puts(uint2hex((uint32_t)f));
+		console_puts("\n\n");
 
 		/* Execute the payload */
 		value = f();

@@ -119,3 +119,48 @@ void console_puts(char * str)
 		console_write((uint8_t)*str++);
 }
 
+
+/* Low level graphic utilities and functions */
+
+/* We assume that each pixel is defined by a uint8 3-vector */
+uint16_t p24_to_p16(uint8_t * pixel)
+{
+	/* BGR to RGB */
+	uint16_t result = 0x0000;
+	/* Red */
+	result |= (pixel[2] >> 3) << 11;
+	result |= (pixel[1] >> 2) << 5;
+	result |= (pixel[0] >> 3);
+	
+	return result;
+}
+
+void drawBMPImage(uint8_t * image, uint16_t x, uint16_t y)
+{
+
+}
+
+void printPixel(uint16_t pixel, uint16_t x, uint16_t y)
+{
+	volatile unsigned short int *ptr;
+	ptr = (unsigned short int *) framebuffer.screenbase + y*(BITS_PER_PIXEL/8) + x*(BITS_PER_PIXEL/8);
+	ptr = pixel;
+
+}
+
+void drawImage(uint8_t * image, uint16_t x, uint16_t y, uint16_t width, uint16_t heigh)
+{
+	uint16_t i, j;
+	for(i = x; i < x + width || i < framebuffer.max_x, i++)
+	{
+		for(j = y; j < y + heigh || j < framebuffer.max_y, j++)
+		{
+			printPixel(p24_to_p16(image), i, j);
+			image += 3;
+		}
+	}
+
+}
+
+
+
