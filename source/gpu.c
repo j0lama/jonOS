@@ -5,7 +5,25 @@
 #include "uart.h"
 #include "fonts.h"
 
+#include "string.h"
+
+#define MIN(a,b) (((a)<(b))?(a):(b))
+#define MAX(a,b) (((a)>(b))?(a):(b))
+
+#define BMP_HEADER_SIZE 54
+
+
 extern int idiv(uint32_t N, uint32_t D);
+
+
+typedef struct 
+{
+	uint8_t * image;
+	uint32_t width;
+	uint32_t heigh;
+	uint16_t size;
+} BMPImage;
+
 
 typedef struct 
 {
@@ -122,44 +140,92 @@ void console_puts(char * str)
 
 /* Low level graphic utilities and functions */
 
-/* We assume that each pixel is defined by a uint8 3-vector */
 uint16_t p24_to_p16(uint8_t * pixel)
 {
 	/* BGR to RGB */
 	uint16_t result = 0x0000;
-	/* Red */
-	result |= (pixel[2] >> 3) << 11;
-	result |= (pixel[1] >> 2) << 5;
-	result |= (pixel[0] >> 3);
+
+	result |= ((uint16_t) (pixel[2] >> 3)) << 11;
+	result |= ((uint16_t) (pixel[1] >> 2)) << 5;
+	result |= ((uint16_t) (pixel[0] >> 3));
 	
 	return result;
 }
 
-void drawBMPImage(uint8_t * image, uint16_t x, uint16_t y)
+uint16_t p8_to_p16(uint8_t * pixel)
 {
+	uint16_t result = 0x0000;
+	result |= ((uint16_t) (*pixel) & 0x03) << 3;
+	result |= ((uint16_t)( (*pixel) & 0x1C) >> 2) << 8;
+	result |= ((uint16_t)( (*pixel) & 0xE0) >> 5) << 13;
 
+	return result;
 }
 
 void printPixel(uint16_t pixel, uint16_t x, uint16_t y)
 {
 	volatile unsigned short int *ptr;
-	ptr = (unsigned short int *) framebuffer.screenbase + y*(BITS_PER_PIXEL/8) + x*(BITS_PER_PIXEL/8);
-	ptr = pixel;
-
+	ptr = (unsigned short int *) framebuffer.screenbase + y*framebuffer.x + x;
+	*ptr = pixel;
 }
 
-void drawImage(uint8_t * image, uint16_t x, uint16_t y, uint16_t width, uint16_t heigh)
+void drawImage24(BMPImage bmp, uint16_t x, uint16_t y)
 {
 	uint16_t i, j;
-	for(i = x; i < x + width || i < framebuffer.max_x, i++)
+	uint16_t iIni, iEnd, jIni, jEnd;
+
+	iIni = MAX(x, 0);
+	iEnd = MIN(x + bmp.width, framebuffer.x);
+	jIni = MAX(y, 0);
+	jEnd = MIN(y + bmp.heigh, framebuffer.y);
+	for(j = jEnd; j > jIni; j--)
 	{
-		for(j = y; j < y + heigh || j < framebuffer.max_y, j++)
+		for(i = iIni; i < iEnd; i++)
 		{
-			printPixel(p24_to_p16(image), i, j);
-			image += 3;
+			printPixel(p24_to_p16(bmp.image), i, j);
+			bmp.image += 3;
 		}
 	}
+}
 
+void drawImage8(BMPImage bmp, uint16_t x, uint16_t y)
+{
+	uint16_t i, j;
+	for(i = x; i < x + bmp.width && i < framebuffer.x; i++)
+	{
+		for(j = y; j < y + bmp.heigh && j < framebuffer.y; j++)
+		{
+			printPixel(p8_to_p16(bmp.image), i, j);
+			bmp.image += 1;
+		}
+	}
+}
+
+void parseBMPHeader(uint8_t * image, BMPImage * bmp)
+{
+	bmp->image = image + BMP_HEADER_SIZE;
+	bmp->width = *((uint32_t*)(image+18));
+	bmp->heigh = *((uint32_t*)(image+22));
+	bmp->size = *((uint16_t*)(image+28));
+
+	console_puts("\n Width: ");
+	console_puts(uint2dec(bmp->width));
+	console_puts("\n Heigh: ");
+	console_puts(uint2dec(bmp->heigh));
+	console_puts("\n Size: ");
+	console_puts(uint2dec(bmp->size));
+}
+
+
+void drawBMPImage(uint8_t * image, uint16_t x, uint16_t y)
+{
+	BMPImage bmp;
+	parseBMPHeader(image, &bmp);
+	if(bmp.size == 8)
+		drawImage8(bmp, x, y);
+	else if(bmp.size == 24)
+		drawImage24(bmp, x, y);
+	return;
 }
 
 

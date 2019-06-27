@@ -12,6 +12,8 @@
 #include "cache.h"
 #include "address_solver.h"
 
+#include "image.h"
+
 extern volatile uint32_t __address_solver;
 extern volatile uint32_t __heap_start;
 
@@ -23,8 +25,8 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	(void) atags;
 
 	/* Network configuration */
-	uint8_t IPAddress[] = {123, 123, 123, 123};
-	uint8_t Gateway[] = {123, 123, 123, 1};
+	uint8_t IPAddress[] = {192, 168, 1, 123};
+	uint8_t Gateway[] = {192, 168, 1, 1};
 	uint8_t SubnetMask[] = {255, 255, 255, 0};
 	uint8_t msgPayloadLen[32];
 	uint8_t * payload = NULL;
@@ -49,7 +51,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	int ret = networkInit(IPAddress, Gateway, SubnetMask);
 
 	/* Init GPU and screen */
-	gpu_init(CHAR_SIZE_BIG);
+	gpu_init(CHAR_SIZE_MEDIUM);
 
 	if(ret != 0)
 		console_puts(" Error in network\n\n");
@@ -82,6 +84,31 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printIP(netConfiguration.SubnetMask);
 	console_puts("\n\n MAC address: ");
 	printMAC(netConfiguration.MACAddress);
+
+
+
+
+
+
+
+	char buffer[32];
+	while(1)
+	{
+		bzero(buffer, 32);
+		recv(0, buffer, 32);
+		console_puts(buffer);
+		if(strcmp(buffer, " img\n") == 0)
+		{
+			drawBMPImage(image_bmp, 400, 10);
+		}
+	}
+
+
+
+
+
+
+
 
 	/* Setting up the screen colors */
 	set_foreground_color(WHITE);
@@ -124,4 +151,5 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	}
 
 }
+
 

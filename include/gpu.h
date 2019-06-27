@@ -28,4 +28,6 @@ void console_puts(char *text);
 void set_foreground_color(unsigned short int color);
 void set_background_color(unsigned short int color);
 
+void drawBMPImage(uint8_t * image, uint16_t x, uint16_t y);
+
 #endif
