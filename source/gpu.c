@@ -7,8 +7,7 @@
 
 #include "string.h"
 
-#define MIN(a,b) (((a)<(b))?(a):(b))
-#define MAX(a,b) (((a)>(b))?(a):(b))
+#define MID(a,n,b) (((a)<(n) && (n)<(b))?(1):(0))
 
 #define BMP_HEADER_SIZE 54
 
@@ -171,19 +170,22 @@ void printPixel(uint16_t pixel, uint16_t x, uint16_t y)
 
 void drawImage24(BMPImage bmp, uint16_t x, uint16_t y)
 {
-	uint16_t i, j;
-	uint16_t iIni, iEnd, jIni, jEnd;
-
-	iIni = MAX(x, 0);
-	iEnd = MIN(x + bmp.width, framebuffer.x);
-	jIni = MAX(y, 0);
-	jEnd = MIN(y + bmp.heigh, framebuffer.y);
-	for(j = jEnd; j > jIni; j--)
+	uint16_t i, j, aux;
+	for(j = y + bmp.heigh; j > y; j--)
 	{
-		for(i = iIni; i < iEnd; i++)
+		for(i = x; i < x + bmp.width; i++)
 		{
-			printPixel(p24_to_p16(bmp.image), i, j);
+			if(MID(0, i, framebuffer.x) && MID(0, j, framebuffer.y))
+				printPixel(p24_to_p16(bmp.image), i, j);
 			bmp.image += 3;
+		}
+
+
+		aux = 0;
+		while((bmp.width*3 + aux) % 4 != 0)
+		{
+			aux++;
+			bmp.image++;
 		}
 	}
 }
@@ -207,13 +209,6 @@ void parseBMPHeader(uint8_t * image, BMPImage * bmp)
 	bmp->width = *((uint32_t*)(image+18));
 	bmp->heigh = *((uint32_t*)(image+22));
 	bmp->size = *((uint16_t*)(image+28));
-
-	console_puts("\n Width: ");
-	console_puts(uint2dec(bmp->width));
-	console_puts("\n Heigh: ");
-	console_puts(uint2dec(bmp->heigh));
-	console_puts("\n Size: ");
-	console_puts(uint2dec(bmp->size));
 }
 
 

@@ -60,10 +60,12 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	uart_puts("Hello from UART\r\n");
 
 	/* Setting up the screen colors */
-	set_foreground_color(YELLOW);
+	set_foreground_color(GREEN);
 
 	/* Printing system information */
-	console_puts(" Welcome to jonOS\n\n");
+	console_puts("\n\n\n\n\n\n\n\n Welcome to jonOS\n\n");
+
+	set_foreground_color(WHITE);
 	//console_puts(" Screen base address: ");
 	//console_puts(uint2hex(framebuffer.screenbase));
 	console_puts("\n\n Screen dimensions: ");
@@ -84,6 +86,7 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 	printIP(netConfiguration.SubnetMask);
 	console_puts("\n\n MAC address: ");
 	printMAC(netConfiguration.MACAddress);
+	drawBMPImage(jonOS_logo, 0, 0);
 
 
 
@@ -91,17 +94,9 @@ void main(uint32_t r0, uint32_t r1, uint32_t atags)
 
 
 
-	char buffer[32];
-	while(1)
-	{
-		bzero(buffer, 32);
-		recv(0, buffer, 32);
-		console_puts(buffer);
-		if(strcmp(buffer, " img\n") == 0)
-		{
-			drawBMPImage(image_bmp, 400, 10);
-		}
-	}
+	
+	drawBMPImage(image2_bmp, 500, 500);
+	while(1);
 
 
 
