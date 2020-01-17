@@ -2,7 +2,7 @@
 
 jonOS is a basic OS for Raspberry Pi (ARM) that allows build embedded systems for high performance environments.
 
-This project defines a new architecture for operating systems that takes the main characteristics of other architectures such as Embedded OS, OS as library, High Performance OS, monotasking OS and mix it with the idea os a iterative server. 
+This project defines a new architecture for operating systems that takes the main capabilities of other architectures such as Embedded OS, OS as library, High Performance OS, monotasking OS and mix them with the iterative server idea. 
 
 The performance results of this architecture compared with Rasbian (Debian based OS designed for Raspberry Pi) achieve the following times in CPU time, real time and network time:
 
